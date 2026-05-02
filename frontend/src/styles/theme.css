@@ -1,0 +1,29 @@
+:root {
+  --sidebar-bg: #0B2019;       
+  --main-bg: #F3EDDF;          
+  --accent-orange: #E85D3F;   
+  --sidebar-tag: #7A8E85;
+  --sidebar-text: #E8E1d3;
+  --text-main: #1A1A1A;
+  --text-muted: #6C757D;
+  --card-bg: #FFFFFF;
+  
+  --sidebar-width: 260px;
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  
+  --font-heading: 'Playfair Display', serif; 
+  --font-body: 'Inter', sans-serif;          
+}
+
+body {
+  background-color: var(--main-bg);
+  font-family: var(--font-body);
+  color: var(--text-main);
+  margin: 0;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+}

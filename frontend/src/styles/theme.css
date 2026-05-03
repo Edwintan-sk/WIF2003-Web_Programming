@@ -27,3 +27,108 @@ h1, h2, h3 {
   font-family: var(--font-heading);
   font-weight: 700;
 }
+
+.serif-font {
+  font-family: var(--font-heading);
+}
+
+/* Sidebar */
+.sidebar-container {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  width: var(--sidebar-width);
+  top: 0;
+  left: 0;
+  position: fixed;
+}
+
+.sidebar-link {
+  font-size: 13px;
+  color: var(--sidebar-text) !important;
+  opacity: 0.8;
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.sidebar-link:hover,
+.sidebar-link.active {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff !important;
+  opacity: 1;
+}
+
+.sidebar-badge {
+  background-color: var(--accent-orange) !important;
+  font-size: 10px;
+  margin-left: auto;
+}
+
+.sidebar-header {
+  color: var(--sidebar-tag);
+  letter-spacing: 1px;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+/* Brand Logo */
+.brand-logo-box {
+  background: var(--accent-orange);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: white;
+  font-weight: bold;
+}
+
+/* Menu Squares */
+.menu-square {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background-color: var(--sidebar-tag); 
+}
+
+.menu-square.active-square {
+  background-color: var(--accent-orange);
+}
+
+/* Profile Section */
+.profile-container {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  background-color: #F9E7DE;
+  color: #C85A3A;
+  font-size: 14px;
+}
+
+/* Card */
+.custom-card {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
+  border: none;
+  background-color: var(--card-bg);
+}
+
+.kpi-card {
+  border-radius: 18px;
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
+  border: none;
+  background-color: var(--card-bg);
+}
+
+.submit-btn {
+  background-color: var(--card-bg);
+  border: none;
+}
+
+.submit-btn:hover{
+  background-color: #05100c !important;
+}
+

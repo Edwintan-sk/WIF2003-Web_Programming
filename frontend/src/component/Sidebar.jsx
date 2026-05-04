@@ -16,8 +16,8 @@ const Sidebar = () => {
 
   // TODO: Replace correct path
   const communicationItems = [
-    { id: 'notifications', label: 'Notifications', badge: 3, path: '/notifications'},
-    { id: 'feedback', label: 'Feedback', path: '/feedback'},
+    { id: 'notifications', label: 'Notifications', badge: 3, path: '/notification-dashboard'},
+    { id: 'feedback', label: 'Feedback', badge: 2, path: '/feedback'},
     { id: 'support', label: 'Help & Support', path: '/help-support'}
   ];
 

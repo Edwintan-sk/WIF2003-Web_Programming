@@ -419,3 +419,107 @@ h1, h2, h3 {
   height: 24px;
   font-size: 12px;
 }
+
+/* ===== Notification Page Styles ===== */
+
+/* Search Bar */
+.search-bar-wrapper {
+  background-color: transparent;
+  border-bottom: 1px solid var(--divider-color);
+  border-radius: 0;
+  max-width: 400px;
+}
+
+.search-bar-wrapper .form-control::placeholder {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Notification Card */
+.notification-card {
+  transition: all 0.2s ease;
+  border-left-width: 4px !important;
+  border-left-style: solid !important;
+}
+
+.notification-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+/* Notification icon button */
+.notification-icon-btn {
+  background-color: var(--main-bg) !important;
+  transition: all 0.2s ease;
+}
+
+.notification-icon-btn:hover {
+  background-color: #e8e4d9 !important;
+}
+
+/* Notification tag badge overrides */
+.notification-tag {
+  border: none !important;
+}
+
+/* Mark all as read button */
+.btn-mark-all-read {
+  background-color: #fafaf8 !important;
+  color: #6c757d !important;
+  border-color: #6c757d !important;
+  transition: all 0.2s ease;
+}
+
+.btn-mark-all-read:hover {
+  background-color: #6c757d !important;
+  color: #fafaf8 !important;
+}
+
+/* ===== Feedback Page Styles ===== */
+
+/* Conversation message bubble */
+.conversation-bubble {
+  background-color: #f8f7f3;
+  border-radius: 12px !important;
+  box-shadow: none;
+}
+
+/* Reaction pills */
+.reaction-pill {
+  background-color: #f3f4f6 !important;
+  transition: all 0.2s ease;
+}
+
+.reaction-pill:hover {
+  background-color: #e8e4d9 !important;
+}
+
+/* Conversation action links */
+.conversation-action {
+  transition: color 0.2s ease;
+}
+
+.conversation-action:hover {
+  color: var(--text-main) !important;
+}
+
+/* File attachment card */
+.attachment-card {
+  background-color: #f8f7f3;
+  border-radius: 10px !important;
+  transition: all 0.2s ease;
+}
+
+.attachment-card:hover {
+  background-color: #f0eee6;
+}
+
+/* Feedback toggle switch */
+.feedback-switch .form-check-input:checked {
+  background-color: var(--sidebar-bg);
+  border-color: var(--sidebar-bg);
+}
+
+.feedback-switch .form-check-input {
+  cursor: pointer;
+}

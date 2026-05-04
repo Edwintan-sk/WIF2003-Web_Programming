@@ -1,9 +1,41 @@
 import { Nav } from 'react-bootstrap';
-import { BoxArrowRight } from 'react-bootstrap-icons'; 
+import { BoxArrowRight } from 'react-bootstrap-icons';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/theme.css';
 
 const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
   const isManager = role === "manager";
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Define link arrays based on role
+  const managerLinks = [
+    { label: "Team dashboard", path: "/manager", icon: true },
+    { label: "All KPIs", path: "/manager/all-kpis", icon: true, badge: "24" },
+    { label: "Assignment center", path: "/manager/assign", icon: true },
+    { label: "Verification inbox", path: "/manager/verify", icon: true, badge: "8" },
+  ];
+
+  const staffLinks = [
+    { label: "Dashboard", path: "/", icon: true },
+    { label: "My KPIs", path: "/staff/kpis", icon: true, badge: "12" },
+    { label: "Submit progress", path: "/staff/submit", icon: true },
+    { label: "Evidence archive", path: "/staff/archive", icon: true },
+  ];
+
+  const workspaceLinks = isManager ? managerLinks : staffLinks;
+
+  const communicationLinks = [
+    { label: "Notifications", path: "/notifications", icon: true, badge: isManager ? "5" : "3" },
+    { label: "Feedback", path: "/feedback", icon: true },
+    { label: isManager ? "Reports" : "Help & Support", path: isManager ? "/reports" : "/help", icon: true },
+  ];
+
+  const isActive = (path) => location.pathname === path;
+
+  const handleNavigation = (path) => {
+    navigate(path);
+  };
 
   return (
     <div className="d-flex flex-column vh-100 p-4 shadow-lg z-1 sidebar-container">
@@ -16,57 +48,51 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
       </div>
 
       <div className="d-flex flex-column gap-5 flex-grow-1 overflow-auto overflow-x-hidden">
+          {/* Workspace Section */}
           <div>
             <p className="sidebar-header small mb-3">Workspace</p>
             <Nav className="flex-column gap-1">
-              {/* Active Page Square (#C85A3A) */}
-              <Nav.Link href="#" className="px-3 py-2 d-flex align-items-center gap-3 rounded-3 sidebar-link active">
-                <div className="menu-square"></div>
-                <span className="fw-normal">{isManager ? "Team dashboard" : "Dashboard"}</span>
-              </Nav.Link>
-              
-              {/* Inactive Page Squares (#7A8E85) */}
-              <Nav.Link href="#" className="px-3 py-2 d-flex justify-content-between align-items-center rounded-3 sidebar-link">
-                <div className="d-flex align-items-center gap-3">
-                  <div className="menu-square"></div>
-                  <span className="fw-normal">{isManager ? "All KPIs" : "My KPIs"}</span>
-                </div>
-                <span className="badge rounded-pill sidebar-badge">{isManager ? "24" : "12"}</span>
-              </Nav.Link>
-
-              <Nav.Link href="#" className="px-3 py-2 d-flex align-items-center gap-3 rounded-3 sidebar-link">
-                <div className="menu-square"></div>
-                <span className="fw-normal">{isManager ? "Assignment center" : "Submit progress"}</span>
-              </Nav.Link>
-
-              <Nav.Link href="#" className="px-3 py-2 d-flex justify-content-between align-items-center rounded-3 sidebar-link">
-                <div className="d-flex align-items-center gap-3">
-                  <div className="menu-square"></div>
-                  <span className="fw-normal">{isManager ? "Verification inbox" : "Evidence archive"}</span>
-                </div>
-                {isManager && <span className="badge rounded-pill sidebar-badge">8</span>}
-              </Nav.Link>
+              {workspaceLinks.map((link, index) => {
+                const active = isActive(link.path);
+                return (
+                  <Nav.Link 
+                    key={index}
+                    onClick={() => handleNavigation(link.path)}
+                    className={`px-3 py-2 d-flex justify-content-between align-items-center rounded-3 sidebar-link ${active ? 'active' : ''}`}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="d-flex align-items-center gap-3">
+                      <div className={`menu-square ${active ? 'active-square' : ''}`}></div>
+                      <span className="fw-normal">{link.label}</span>
+                    </div>
+                    {link.badge && <span className="badge rounded-pill sidebar-badge">{link.badge}</span>}
+                  </Nav.Link>
+                );
+              })}
             </Nav>
           </div>
 
+          {/* Communication Section */}
           <div>
             <p className="sidebar-header small mb-3">Communication</p>
             <Nav className="flex-column gap-1">
-              <Nav.Link href="#" className="px-3 py-2 d-flex justify-content-between align-items-center rounded-3 sidebar-link">
-                <div className="d-flex align-items-center gap-3">
-                  <div className="menu-square"></div>
-                  <span className="fw-normal">Notifications</span>
-                </div>
-                <span className="badge rounded-pill sidebar-badge">{isManager ? "5" : "3"}</span>
-              </Nav.Link>
-              <Nav.Link href="#" className="px-3 py-2 d-flex align-items-center gap-3 rounded-3 sidebar-link">
-                <div className="menu-square"></div>
-                <span className="fw-normal">Feedback</span>
-              </Nav.Link>
-              <Nav.Link href="#" className="px-3 py-2 d-flex align-items-center gap-3 rounded-3 sidebar-link">
-                <div className="menu-square"></div>
-                <span className="fw-normal">{isManager ? "Reports" : "Help & Support"}</span>
-              </Nav.Link>
+              {communicationLinks.map((link, index) => {
+                const active = isActive(link.path);
+                return (
+                  <Nav.Link 
+                    key={index}
+                    onClick={() => handleNavigation(link.path)}
+                    className={`px-3 py-2 d-flex justify-content-between align-items-center rounded-3 sidebar-link ${active ? 'active' : ''}`}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="d-flex align-items-center gap-3">
+                      <div className={`menu-square ${active ? 'active-square' : ''}`}></div>
+                      <span className="fw-normal">{link.label}</span>
+                    </div>
+                    {link.badge && <span className="badge rounded-pill sidebar-badge">{link.badge}</span>}
+                  </Nav.Link>
+                );
+              })}
             </Nav>
           </div>
         </div>

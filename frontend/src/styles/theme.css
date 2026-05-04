@@ -116,6 +116,41 @@ h1, h2, h3 {
   background-color: var(--card-bg);
 }
 
+/* Stat Card - Manager Dashboard */
+.stat-card {
+  width: 201px;
+  height: 164px;
+  border-radius: 18px;
+  background-color: var(--card-bg);
+  border: 1px solid #EAE3D2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card-body {
+  padding: 20px 22px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.stat-card-title {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.stat-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  width: fit-content;
+}
+
 .kpi-card {
   border-radius: 18px;
   box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
@@ -132,3 +167,295 @@ h1, h2, h3 {
   background-color: #05100c !important;
 }
 
+/* KPI Table Styles */
+.table-container {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.kpi-table {
+  margin: 0;
+}
+
+.kpi-table thead {
+  background-color: #F8F4F0;
+  border-bottom: 2px solid #E8E1D3;
+}
+
+.kpi-table thead th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 16px 12px;
+  border: none;
+}
+
+.kpi-table tbody td {
+  padding: 16px 12px;
+  vertical-align: middle;
+  border-bottom: 1px solid #F0EAE0;
+  font-size: 13px;
+}
+
+.kpi-table tbody tr:hover {
+  background-color: #FAFAF8;
+}
+
+.badge-category {
+  background-color: transparent;
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.badge-assigned {
+  background-color: #E8F0ED;
+  color: #0B2019;
+  font-weight: 600;
+  font-size: 10px;
+  padding: 4px 8px;
+}
+
+.badge-status-pill {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-bar-wrapper {
+  flex: 1;
+  height: 6px;
+  background-color: #E8E1D3;
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  min-width: 35px;
+  font-size: 12px;
+  color: var(--text-main);
+}
+
+.edit-button {
+  background-color: #1A1A1A;
+  border: none;
+  color: white;
+  font-size: 12px;
+  padding: 6px 12px;
+  transition: all 0.2s ease;
+}
+
+.edit-button:hover {
+  background-color: #333;
+}
+
+.badge-pill {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background-color: #2C2C2C;
+  color: white;
+  margin-right: 8px;
+  display: inline-block;
+}
+
+.filter-select {
+  border-radius: 6px;
+  border: 1px solid #E8E1D3;
+  font-size: 13px;
+  padding: 8px 12px;
+}
+
+/* Form Styles */
+.form-card {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: none;
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.form-section {
+  padding-bottom: 24px;
+  border-bottom: 1px solid #F0EAE0;
+}
+
+.form-section:last-child {
+  border-bottom: none;
+}
+
+.form-control-light {
+  border-radius: 8px;
+  border: 1px solid #E8E1D3;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: var(--font-body);
+}
+
+.form-control-light:focus {
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 0 0.2rem rgba(232, 93, 63, 0.15);
+}
+
+.form-control-light:placeholder-shown {
+  background-color: #F9F7F4;
+}
+
+.form-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.form-select {
+  border-radius: 8px;
+  border: 1px solid #E8E1D3;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.form-select:focus {
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 0 0.2rem rgba(232, 93, 63, 0.15);
+}
+
+.form-check-input {
+  border-radius: 4px;
+  border: 1px solid #E8E1D3;
+}
+
+.form-check-input:checked {
+  background-color: var(--accent-orange);
+  border-color: var(--accent-orange);
+}
+
+/* Team Progress Overview */
+.team-progress-row {
+  display: flex;
+  align-items: center;
+  height: 92px;
+  padding: 16px 0;
+  gap: 12px;
+  border-bottom: 1px solid #E8E1D3;
+}
+
+.team-progress-row:last-child {
+  border-bottom: none;
+}
+
+.team-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Recent Activity Section */
+.activity-item {
+  padding: 0;
+  gap: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-item-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.activity-item-content {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.milestones-list {
+  margin-bottom: 12px;
+}
+
+.evidence-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Button Styles */
+.btn-orange {
+  background-color: var(--accent-orange);
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-orange:hover {
+  background-color: #D74528;
+  color: white;
+}
+
+.btn-orange:active {
+  background-color: #C73F1F;
+}
+
+.btn-light {
+  background-color: #F9F7F4;
+  border: 1px solid #E8E1D3;
+  color: var(--text-main);
+}
+
+.btn-light:hover {
+  background-color: #F0EAE0;
+  border-color: #D8CFC2;
+}
+
+.btn-outline-secondary {
+  color: var(--text-muted);
+  border-color: #E8E1D3;
+}
+
+.btn-outline-secondary:hover {
+  background-color: #F9F7F4;
+  color: var(--text-main);
+}
+
+.btn-danger {
+  background-color: #DC3545;
+  border-color: #DC3545;
+}
+
+.btn-danger:hover {
+  background-color: #C82333;
+  border-color: #BD2130;
+}

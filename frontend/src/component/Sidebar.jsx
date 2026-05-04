@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Nav } from 'react-bootstrap';
 import { BoxArrowRight } from 'react-bootstrap-icons'; 
 import { Link, useLocation } from 'react-router-dom';
@@ -6,8 +6,6 @@ import '../styles/theme.css';
 
 const Sidebar = () => {
   const location = useLocation();
-
-  const [activeKey, setActiveKey] = useState('dashboard');
 
   const workspaceItems = [
     { id: 'dashboard', label: 'Dashboard', path: '/staff-dashboard'},
@@ -22,11 +20,6 @@ const Sidebar = () => {
     { id: 'feedback', label: 'Feedback', path: '/feedback'},
     { id: 'support', label: 'Help & Support', path: '/help-support'}
   ];
-
-  const handleNavClick = (e, id) => {
-    e.preventDefault();
-    setActiveKey(id);
-  }
 
   return (
     <div className="d-flex flex-column vh-100 p-4 shadow-lg z-1 sidebar-container">

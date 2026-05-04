@@ -65,7 +65,7 @@ const VerificationInbox = () => {
   ];
 
   return (
-    <div className="page-container">
+    <div>
       {/* Header Section */}
       <header className="d-flex justify-content-between align-items-start mb-5">
         <div>

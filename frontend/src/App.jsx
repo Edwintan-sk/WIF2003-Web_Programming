@@ -5,6 +5,7 @@ import StaffDashboard from './pages/staff-dashboard';
 import StaffAssignedKPI from './pages/staff-assigned-kpi';
 import StaffSubmitProgress from './pages/staff-submit-progress';
 import VerificationInbox from './pages/verification-inbox';
+import EvidenceDetailView from './pages/evidence-detail-view';
 
 const AppLayout = () => {
   const location = useLocation();
@@ -15,8 +16,9 @@ const AppLayout = () => {
       <Sidebar role={isManager ? 'manager' : 'staff'} />
       <div className="main-content">
         <Routes>
-          <Route path="/" element={<Navigate to="/staff-dashboard" replace />} /> 
-          
+          {/* Index page */}
+          <Route path="/" element={<Navigate to="/staff-dashboard" replace />} />
+
           {/* Staff Pages */}
           <Route path="/staff-dashboard" element={<StaffDashboard/>} />
           <Route path="/staff-assigned-kpi" element={<StaffAssignedKPI/>} />
@@ -24,6 +26,7 @@ const AppLayout = () => {
 
           {/* Manager Pages */}
           <Route path="/manager/verification-inbox" element={<VerificationInbox/>} />
+          <Route path="/manager/evidence-detail/:id" element={<EvidenceDetailView/>} />
         </Routes>
       </div>
     </>

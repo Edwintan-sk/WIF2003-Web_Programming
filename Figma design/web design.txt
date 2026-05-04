@@ -1,0 +1,24 @@
+1. Authentication & Account (Universal)
+These pages handle the "General" module you are personally in charge of.
+●	Login Page: A clean entry point with role-based authentication.
+●	Register Page: Account creation for new users.
+●	Profile View Page: Displays personal and professional details for both roles.
+●	Update Profile/Settings: A dedicated form to edit info, change passwords, or deactivate accounts.
+2. Manager Interface
+As the overseers, managers need pages focused on creation, distribution, and verification.
+●	Manager Dashboard: A high-level visual tracking interface showing overall team milestones and achievement scores.
+●	KPI Management (Directory): A list view of all existing Key Performance Indicators.
+●	Create/Edit KPI Form: A specialized page or modal to define new targets and goals.
+●	KPI Assignment Center: A dedicated view to link specific KPIs to individual staff members.
+●	Verification Inbox: A list of evidence submitted by staff that is pending review.
+●	Evidence Detail View: A page to review uploaded files (PDFs, images) and approve or reject proof.
+3. Staff Interface
+Staff members need pages that prioritize their specific assignments and progress reporting.
+●	Staff Dashboard: A personalized view focusing on individual progress towards assigned goals.
+●	My Assigned KPIs: A clear list of specific targets the staff member needs to achieve.
+●	Progress Update / Evidence Submission Page: A form-based page to input completion percentages and upload proof files.
+4. Communication & Support (Integrated)
+These features should be designed as components or standalone views accessible across the system.
+●	Notifications Center: A panel or page for real-time push/email alerts regarding deadlines and approvals.
+●	Feedback/Comments Interface: A sidebar or section within KPI pages for direct communication between staff and managers.
+

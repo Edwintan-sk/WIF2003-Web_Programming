@@ -1,25 +1,30 @@
-import { Container, Navbar, Nav, Button } from 'react-bootstrap';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './component/Sidebar';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import StaffDashboard from './pages/staff-dashboard';
-import StaffAssignedKPI from './pages/staff-assigned-kpi';
-import StaffSubmitProgress from './pages/staff-submit-progress';
+import ManagerDashboard from './pages/manager-dashboard';
+import AllKPIs from './pages/all-kpis';
 
 function App() {
   return (
     <Router>
-        <Sidebar />
+      <Routes>
+        {/* Staff Routes */}
+        <Route path="/" element={<StaffDashboard />} />
+        <Route path="/staff/kpis" element={<StaffDashboard />} />
+        <Route path="/staff/submit" element={<StaffDashboard />} />
+        <Route path="/staff/archive" element={<StaffDashboard />} />
 
-        <div className="main-content">
-          <Routes>
-            {/* Index page */}
-            <Route path="/" element={<Navigate to="/staff-dashboard" replace />} /> 
-            {/* Insert other pages here */}
-            <Route path="/staff-dashboard" element={<StaffDashboard/>} />
-            <Route path="/staff-assigned-kpi" element={<StaffAssignedKPI/>} />
-            <Route path="/staff-submit-progress" element={<StaffSubmitProgress/>} />
-          </Routes>
-        </div>
+        {/* Manager Routes */}
+        <Route path="/manager" element={<ManagerDashboard />} />
+        <Route path="/manager/all-kpis" element={<AllKPIs />} />
+        <Route path="/manager/assign" element={<ManagerDashboard />} />
+        <Route path="/manager/verify" element={<ManagerDashboard />} />
+
+        {/* Communication Routes */}
+        <Route path="/notifications" element={<ManagerDashboard />} />
+        <Route path="/feedback" element={<ManagerDashboard />} />
+        <Route path="/reports" element={<ManagerDashboard />} />
+        <Route path="/help" element={<StaffDashboard />} />
+      </Routes>
     </Router>
   );
 }

@@ -1,3 +1,6 @@
+@import url("https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css");
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css");
+
 :root {
   --sidebar-bg: #0B2019;       
   --main-bg: #F3EDDF;          
@@ -132,3 +135,215 @@ h1, h2, h3 {
   background-color: #05100c !important;
 }
 
+.main-content {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  background-color: var(--main-bg);
+  flex: 1;
+  padding: 40px 60px;
+  overflow-y: auto;
+}
+
+.filter-btn {
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  background-color: var(--card-bg);
+  color: var(--text-muted);
+}
+
+.filter-btn.active {
+  background-color: var(--text-main) !important;
+  color: white !important;
+}
+
+.filter-btn:not(.active):hover {
+  background-color: #f8f9fa !important;
+}
+
+.kpi-card-wrapper {
+  border-radius: 18px;
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e8e4d9;
+  background-color: var(--card-bg);
+  overflow: hidden;
+}
+
+.kpi-row {
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #e8e4d9;
+}
+
+.kpi-row:last-child {
+  border-bottom: none;
+}
+
+.kpi-row:hover {
+  background-color: #fcfbfa;
+}
+
+.action-btn {
+  transition: background-color 0.2s ease;
+  background-color: var(--main-bg);
+  width: 36px;
+  height: 36px;
+}
+
+.action-btn:hover {
+  background-color: #e8e4d9 !important;
+}
+
+.hide-scrollbar::-webkit-scrollbar { 
+  display: none; 
+}
+.hide-scrollbar { 
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.custom-card {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e8e4d9;
+  background-color: var(--card-bg);
+}
+
+.info-card {
+  background-color: var(--sidebar-bg);
+  color: white;
+  border: none;
+}
+
+/* Form Elements */
+.textarea-custom {
+  background-color: #F8F7F3 !important;
+  border: 1px solid #e8e4d9 !important;
+  border-radius: 8px;
+  resize: none;
+  font-size: 0.9rem;
+  padding: 1rem !important;
+  color: var(--text-main);
+}
+
+.textarea-custom:focus {
+  box-shadow: none !important;
+  border-color: var(--sidebar-tag) !important;
+}
+
+.dashed-dropzone {
+  border: 1px dashed #d1cbbd;
+  border-radius: 12px;
+  background-color: #F8F7F3;
+  text-align: center;
+  padding: 2.5rem;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.dashed-dropzone:hover {
+  background-color: #f0eee6;
+  border-color: var(--sidebar-tag);
+}
+
+/* Custom Buttons */
+.btn-primary-dark {
+  background-color: var(--sidebar-bg);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-primary-dark:hover {
+  background-color: #05100c;
+  color: white;
+}
+
+.btn-outline-custom {
+  border: 1px solid #e8e4d9;
+  background-color: white;
+  color: var(--text-main);
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-custom:hover {
+  background-color: #f8f9fa;
+  border-color: #d1cbbd;
+}
+
+.btn-close-custom {
+  background-color: white;
+  border: 1px solid #e8e4d9;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-close-custom:hover {
+  background-color: #f8f9fa;
+}
+
+/* History Timeline */
+.history-item {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.history-item:last-child {
+  margin-bottom: 0;
+}
+.history-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #e2efe9;
+  color: #183628;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+/* Custom Range Slider */
+.custom-range {
+  width: 100%;
+  -webkit-appearance: none;
+  background: transparent;
+  margin: 10px 0;
+}
+.custom-range:focus {
+  outline: none;
+}
+.custom-range::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  cursor: pointer;
+  background: var(--sidebar-bg);
+  border-radius: 3px;
+}
+.custom-range::-webkit-slider-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--sidebar-bg);
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -6px;
+  box-shadow: 0 0 0 3px white, 0 0 0 4px var(--sidebar-bg);
+}

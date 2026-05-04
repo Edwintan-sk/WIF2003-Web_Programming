@@ -1,9 +1,9 @@
 import Sidebar from '../component/Sidebar';
 
-const Dashboard = () => {
+const StaffDashboard = () => {
   return (
     <div className="d-flex">
-      <Sidebar />
+      <Sidebar role="staff" />
       <main style={{ 
         marginLeft: 'var(--sidebar-width)', 
         flex: 1, 
@@ -20,4 +20,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default StaffDashboard;

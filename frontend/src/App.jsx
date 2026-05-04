@@ -1,9 +1,16 @@
-import { Container, Navbar, Nav, Button } from 'react-bootstrap';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import StaffDashboard from './pages/staff-dashboard';
+import ManagerDashboard from './pages/manager-dashboard';
 
 function App() {
   return (
-   <StaffDashboard />
+    <Router>
+      <Routes>
+        {/* Simulate different logins by visiting /staff or /manager */}
+        <Route path="/" element={<StaffDashboard />} />
+        <Route path="/manager" element={<ManagerDashboard />} />
+      </Routes>
+    </Router>
   );
 }
 

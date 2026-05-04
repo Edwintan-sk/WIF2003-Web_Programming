@@ -4,21 +4,31 @@ import { BoxArrowRight } from 'react-bootstrap-icons';
 import { Link, useLocation } from 'react-router-dom';
 import '../styles/theme.css';
 
-const Sidebar = () => {
+const Sidebar = ({ role = 'staff' }) => {
   const location = useLocation();
 
-  const workspaceItems = [
+  const staffWorkspaceItems = [
     { id: 'dashboard', label: 'Dashboard', path: '/staff-dashboard'},
     { id: 'kpis', label: 'My KPIs', badge: 12, path: '/staff-assigned-kpi'},
     { id: 'progress', label: 'Submit progress', path: '/staff-submit-progress'},
     { id: 'archive', label: 'Evidence archive', path: '/staff-evidence-archive' }
   ];
 
-  // TODO: Replace correct path
+  const managerWorkspaceItems = [
+    { id: 'team-dashboard', label: 'Team dashboard', path: '/manager/dashboard'},
+    { id: 'all-kpis', label: 'All KPIs', path: '/manager/all-kpis'},
+    { id: 'assignment-center', label: 'Assignment center', path: '/manager/assignment-center'},
+    { id: 'verification-inbox', label: 'Verification inbox', badge: 8, path: '/manager/verification-inbox'}
+  ];
+
+  const workspaceItems = role === 'manager' ? managerWorkspaceItems : staffWorkspaceItems;
+
   const communicationItems = [
     { id: 'notifications', label: 'Notifications', badge: 3, path: '/notifications'},
     { id: 'feedback', label: 'Feedback', path: '/feedback'},
-    { id: 'support', label: 'Help & Support', path: '/help-support'}
+    role === 'manager' 
+      ? { id: 'reports', label: 'Reports', path: '/reports'}
+      : { id: 'support', label: 'Help & Support', path: '/help-support'}
   ];
 
   return (
@@ -34,7 +44,7 @@ const Sidebar = () => {
       <div className="d-flex flex-column gap-5 flex-grow-1 overflow-auto overflow-x-hidden">
           <div>
             <p className="sidebar-header small mb-3 font-monospace">
-              Workspace
+              WORKSPACE
             </p>
             <Nav className="flex-column gap-1">
               {workspaceItems.map((item) => {

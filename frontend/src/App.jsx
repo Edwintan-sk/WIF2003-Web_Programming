@@ -9,6 +9,7 @@ function App() {
       <Routes>
         {/* Staff Routes */}
         <Route path="/" element={<StaffDashboard />} />
+        <Route path="/staff" element={<StaffDashboard />} />
         <Route path="/staff/kpis" element={<StaffDashboard />} />
         <Route path="/staff/submit" element={<StaffDashboard />} />
         <Route path="/staff/archive" element={<StaffDashboard />} />

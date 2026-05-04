@@ -54,6 +54,10 @@ h1, h2, h3 {
   font-size: 14px;
 }
 
+.text-mini {
+  font-size: 12px;
+}
+
 .heading-greeting {
   font-size: 2.75rem;
   color: var(--text-main);
@@ -145,21 +149,6 @@ h1, h2, h3 {
   font-size: 14px;
 }
 
-/* Card */
-.custom-card {
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
-  border: none;
-  background-color: var(--card-bg);
-}
-
-.kpi-card {
-  border-radius: 18px;
-  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
-  border: none;
-  background-color: var(--card-bg);
-}
-
 .submit-btn {
   background-color: var(--card-bg);
   border: none;
@@ -178,11 +167,12 @@ h1, h2, h3 {
   overflow-y: auto;
 }
 
+/* Filter Buttons (The Pill) */
 .filter-btn {
   transition: all 0.2s ease;
-  border: 1px solid transparent;
-  background-color: var(--card-bg);
+  background-color: #FFFFFF !important;
   color: var(--text-muted);
+  border: 1px solid transparent; 
 }
 
 .filter-btn.active {
@@ -192,6 +182,19 @@ h1, h2, h3 {
 
 .filter-btn:not(.active):hover {
   background-color: #f8f9fa !important;
+}
+
+.filter-btn .badge {
+  transition: all 0.2s ease;
+  background-color: #E2EFE9 !important; /* Pale green inactive */
+  color: #183628 !important; /* Dark green text inactive */
+  border: none !important;
+}
+
+/* When the parent button is active, change the badge inside it */
+.filter-btn.active .badge {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
 }
 
 .kpi-card-wrapper {
@@ -215,20 +218,44 @@ h1, h2, h3 {
   background-color: #fcfbfa;
 }
 
-.action-btn {
-  transition: background-color 0.2s ease;
-  background-color: var(--main-bg);
-  width: 36px;
-  height: 36px;
+/* --- KPI Tag --- */
+.kpi-tag {
+  padding: 0.4em 0.6em;
 }
 
-.action-btn:hover {
-  background-color: #e8e4d9 !important;
+.kpi-tag-outline {
+  letter-spacing: 0.05em;
+  border: 1px solid #e8e4d9;
+  background-color: #FFFFFF;
+}
+
+/* --- Action Arrow Button --- */
+.btn-action-arrow {
+  background-color: #f0eee6 !important;
+  width: 36px;
+  height: 36px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-action-arrow:hover {
+  background-color: #e2e0d8 !important; 
+}
+
+/* --- Type Filter Tabs --- */
+.tab-btn {
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active-tab {
+  background-color: var(--text-main) !important;
+  color: white !important;
 }
 
 .hide-scrollbar::-webkit-scrollbar { 
   display: none; 
 }
+
 .hide-scrollbar { 
   -ms-overflow-style: none; 
   scrollbar-width: none; 
@@ -409,9 +436,26 @@ h1, h2, h3 {
   z-index: 1;
 }
 
+.timeline-line {
+  height: 2px;
+  margin: 0 4px;
+}
+
+.timeline-circle-current {
+  stroke: #597495;
+  stroke-width: 1px;
+}
+
 .stat-dot {
   width: 8px;
   height: 8px;
+}
+
+.status-dot-sm {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
 }
 
 .badge-circle-24 {

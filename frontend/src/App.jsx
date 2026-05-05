@@ -2,11 +2,17 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import StaffDashboard from './pages/staff-dashboard';
 import ManagerDashboard from './pages/manager-dashboard';
 import AllKPIs from './pages/all-kpis';
+import Login from './pages/login';
+import Register from './pages/register';
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
         {/* Staff Routes */}
         <Route path="/" element={<StaffDashboard />} />
         <Route path="/staff" element={<StaffDashboard />} />

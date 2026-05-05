@@ -1,25 +1,37 @@
-import { Container, Navbar, Nav, Button } from 'react-bootstrap';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Sidebar from './component/Sidebar';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import StaffDashboard from './pages/staff-dashboard';
-import NotificationDashboard from './pages/notification-dashboard';
-import FeedbackPage from './pages/feedback';
+import ManagerDashboard from './pages/manager-dashboard';
+import AllKPIs from './pages/all-kpis';
+import Login from './pages/login';
+import Register from './pages/register';
 
 function App() {
   return (
     <Router>
-      <Sidebar />
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-      <div className="main-content">
-        <Routes>
-          {/* Index page */}
-          <Route path="/" element={<Navigate to="/staff-dashboard" replace />} />
-          {/* Insert other pages here */}
-          <Route path="/staff-dashboard" element={<StaffDashboard />} />
-          <Route path="/notification-dashboard" element={<NotificationDashboard />} />
-          <Route path="/feedback" element={<FeedbackPage />} />
-        </Routes>
-      </div>
+        {/* Staff Routes */}
+        <Route path="/" element={<StaffDashboard />} />
+        <Route path="/staff" element={<StaffDashboard />} />
+        <Route path="/staff/kpis" element={<StaffDashboard />} />
+        <Route path="/staff/submit" element={<StaffDashboard />} />
+        <Route path="/staff/archive" element={<StaffDashboard />} />
+
+        {/* Manager Routes */}
+        <Route path="/manager" element={<ManagerDashboard />} />
+        <Route path="/manager/all-kpis" element={<AllKPIs />} />
+        <Route path="/manager/assign" element={<ManagerDashboard />} />
+        <Route path="/manager/verify" element={<ManagerDashboard />} />
+
+        {/* Communication Routes */}
+        <Route path="/notifications" element={<ManagerDashboard />} />
+        <Route path="/feedback" element={<ManagerDashboard />} />
+        <Route path="/reports" element={<ManagerDashboard />} />
+        <Route path="/help" element={<StaffDashboard />} />
+      </Routes>
     </Router>
   );
 }

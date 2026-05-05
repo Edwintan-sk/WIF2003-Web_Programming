@@ -1,42 +1,37 @@
-import { Container, Navbar, Nav, Button } from 'react-bootstrap';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Sidebar from './component/Sidebar';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import StaffDashboard from './pages/staff-dashboard';
-import StaffAssignedKPI from './pages/staff-assigned-kpi';
-import StaffSubmitProgress from './pages/staff-submit-progress';
+import ManagerDashboard from './pages/manager-dashboard';
+import AllKPIs from './pages/all-kpis';
 import VerificationInbox from './pages/verification-inbox';
 import EvidenceDetailView from './pages/evidence-detail-view';
-
-const AppLayout = () => {
-  const location = useLocation();
-  const isManager = location.pathname.startsWith('/manager');
-
-  return (
-    <>
-      <Sidebar role={isManager ? 'manager' : 'staff'} />
-      <div className="main-content">
-        <Routes>
-          {/* Index page */}
-          <Route path="/" element={<Navigate to="/staff-dashboard" replace />} />
-
-          {/* Staff Pages */}
-          <Route path="/staff-dashboard" element={<StaffDashboard/>} />
-          <Route path="/staff-assigned-kpi" element={<StaffAssignedKPI/>} />
-          <Route path="/staff-submit-progress" element={<StaffSubmitProgress/>} />
-
-          {/* Manager Pages */}
-          <Route path="/manager/verification-inbox" element={<VerificationInbox/>} />
-          <Route path="/manager/evidence-detail/:id" element={<EvidenceDetailView/>} />
-        </Routes>
-      </div>
-    </>
-  );
-};
+import StaffAssignedKPI from './pages/staff-assigned-kpi';
+import StaffSubmitProgress from './pages/staff-submit-progress';
 
 function App() {
   return (
     <Router>
-      <AppLayout />
+      <Routes>
+        {/* Staff Routes */}
+        <Route path="/" element={<Navigate to="/staff" replace />} />
+        <Route path="/staff" element={<StaffDashboard />} />
+        <Route path="/staff/kpis" element={<StaffAssignedKPI />} />
+        <Route path="/staff/submit" element={<StaffSubmitProgress />} />
+        <Route path="/staff/archive" element={<StaffDashboard />} />
+
+        {/* Manager Routes */}
+        <Route path="/manager" element={<ManagerDashboard />} />
+        <Route path="/manager/all-kpis" element={<AllKPIs />} />
+        <Route path="/manager/assign" element={<ManagerDashboard />} />
+        <Route path="/manager/verify" element={<VerificationInbox />} />
+        <Route path="/manager/verification-inbox" element={<VerificationInbox />} />
+        <Route path="/manager/evidence-detail/:id" element={<EvidenceDetailView />} />
+
+        {/* Communication Routes */}
+        <Route path="/notifications" element={<ManagerDashboard />} />
+        <Route path="/feedback" element={<ManagerDashboard />} />
+        <Route path="/reports" element={<ManagerDashboard />} />
+        <Route path="/help" element={<StaffDashboard />} />
+      </Routes>
     </Router>
   );
 }

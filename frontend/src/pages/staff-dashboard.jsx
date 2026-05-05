@@ -1,6 +1,7 @@
 import React from 'react';
 import { Row, Col, Card, InputGroup, Form } from 'react-bootstrap';
 import { Search, GridFill, ArrowRight } from 'react-bootstrap-icons';
+import Sidebar from '../component/Sidebar';  // ← ADD THIS IMPORT
 import '../styles/theme.css';
 
 // TODO: Replace Mock Data with database data later
@@ -36,7 +37,16 @@ const activityData = [
 
 const StaffDashboard = () => { 
   return (
-      <main>
+    <div className="d-flex">
+      <Sidebar role="staff" />
+      
+      <main style={{  // ← ADD STYLES TO MAIN
+        marginLeft: 'var(--sidebar-width)', 
+        flex: 1, 
+        padding: '40px 60px',
+        backgroundColor: 'var(--main-bg)',
+        minHeight: '100vh'
+      }}>
         <header className="d-flex justify-content-between align-items-start mb-5">
           <div>
             <p className="text-secondary fw-bold text-uppercase text-micro mb-1">Dashboard</p>
@@ -156,7 +166,8 @@ const StaffDashboard = () => {
             </Card>
           </Col>
         </Row>
-    </main>
+      </main>
+    </div>
   );
 };
 

@@ -61,7 +61,7 @@ const StaffDashboard = () => {
             <h2 className="serif-font mb-2 heading-greeting">Good afternoon, Aisha.</h2>
             <p className="text-secondary mb-0 text-sm">You have 3 KPIs with submissions due this week. Let's keep it moving.</p>
           </div>
-          <button className="btn text-white fw-medium rounded-3 px-4 py-2 d-flex align-items-center gap-2 shadow-sm submit-btn transition-all text-sm" style={{ backgroundColor: 'var(--sidebar-bg)'}}>
+          <button className="btn btn-primary-dark rounded-3 px-4 py-2 d-flex align-items-center gap-2 shadow-sm text-sm">
             Submit progress <ArrowRight size={16} />
           </button>
         </div>
@@ -99,7 +99,7 @@ const StaffDashboard = () => {
         <Row className="g-4 flex-grow-1">
           {/* Active KPIs */}
           <Col xs={12} lg={8}>
-            <Card className="kpi-card h-100 p-4 p-xl-5">
+            <Card className="custom-card h-100 p-4 p-xl-5">
               <div className="d-flex justify-content-between align-items-center mb-4 pb-2">
                 <div className="d-flex align-items-center gap-3">
                   <h2 className="fs-4 fw-bold serif-font mb-0">Active KPIs</h2>
@@ -115,10 +115,10 @@ const StaffDashboard = () => {
                   <div key={kpi.id}>
                     <div className="d-flex align-items-center justify-content-between mb-2 pb-1">
                       <div className="d-flex align-items-center gap-3 flex-grow-1">
-                        <span className="fw-bold rounded px-2 py-1" style={{ fontSize: '12px', backgroundColor: kpi.catBg, color: kpi.catText }}>{kpi.category}</span>
+                        <span className="fw-bold rounded px-2 py-1 text-mini" style={{backgroundColor: kpi.catBg, color: kpi.catText }}>{kpi.category}</span>
                         <span className="fw-bold text-sm">{kpi.title}</span>
                       </div>
-                      <span className="text-secondary fw-medium" style={{ fontSize: '12px' }}>Due {kpi.dueDate}</span>
+                      <span className="text-secondary fw-medium text-mini">Due {kpi.dueDate}</span>
                     </div>
                     <div className="d-flex align-items-center gap-3">
                       <div className="progress progress-track-md flex-grow-1">
@@ -135,9 +135,9 @@ const StaffDashboard = () => {
 
           {/* Recent Activity Timeline */}
           <Col xs={12} lg={4}>
-            <Card className="kpi-card h-100 p-4 p-xl-5">
+            <Card className="custom-card h-100 p-4 p-xl-5">
               <h2 className="fs-4 fw-bold serif-font mb-1">Recent activity</h2>
-              <p className="text-secondary fw-medium mb-4 pb-2" style={{ fontSize: '12px' }}>Last 7 days</p>
+              <p className="text-secondary fw-medium mb-4 pb-2 text-mini">Last 7 days</p>
               
               <div className="timeline-track">
                 {activityData.map((activity) => (
@@ -147,7 +147,7 @@ const StaffDashboard = () => {
                     </div>
                     <div>
                       <h4 className="fw-bold mb-1 text-sm">{activity.title}</h4>
-                      <p className="text-secondary mb-1 lh-sm" style={{ fontSize: '12px' }}>{activity.desc}</p>
+                      <p className="text-secondary mb-1 lh-sm text-mini">{activity.desc}</p>
                       <span className="text-secondary fw-medium text-xs">{activity.time}</span>
                     </div>
                   </div>

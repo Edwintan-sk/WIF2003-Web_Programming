@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import StaffDashboard from './pages/staff-dashboard';
 import ManagerDashboard from './pages/manager-dashboard';
 import AllKPIs from './pages/all-kpis';
+import CreateEditKpi from './pages/create-edit-kpi';
+import AssignmentCenter from './pages/assignment-center';
 import Login from './pages/login';
 import Register from './pages/register';
 import NotificationDashboard from './pages/notification-dashboard';
@@ -31,8 +33,10 @@ function App() {
         {/* Manager Routes */}
         <Route path="/manager" element={<ManagerDashboard />} />
         <Route path="/manager/all-kpis" element={<AllKPIs />} />
+        <Route path="/manager/all-kpis/new" element={<CreateEditKpi />} />
+        <Route path="/manager/all-kpis/edit/:kpiId" element={<CreateEditKpi />} />
+        <Route path="/manager/assign" element={<AssignmentCenter />} />
         {/* Placeholder for uncompleted Manager pages */}
-        <Route path="/manager/assign" element={<ManagerDashboard />} />
         <Route path="/manager/verify" element={<ManagerDashboard />} />
 
         {/* Manager Individual Communication Routes */}

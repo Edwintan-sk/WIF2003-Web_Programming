@@ -43,8 +43,6 @@ const messagesData = [
         avatarColor: '#C85A3A',
         userName: 'Aisha Rahman',
         role: 'Staff',
-        roleBg: '#e6f4ea',
-        roleColor: '#1b6a38',
         time: '11:42 AM',
         message:
           'Just wrapped up the East Library event — 52 attendees, full house. Got great photos and Star News is running a short piece tomorrow. Starting the submission now.',
@@ -59,8 +57,6 @@ const messagesData = [
         avatarColor: '#183628',
         userName: 'Lee Chen',
         role: 'Manager',
-        roleBg: '#fef2e4',
-        roleColor: '#a87022',
         time: '1:15 PM',
         message:
           'Huge — 4th event, right on schedule. When you file the evidence, add the attendance log and at least one wide shot of the venue so we can use it for the quarterly report.',
@@ -79,8 +75,6 @@ const messagesData = [
         avatarColor: '#C85A3A',
         userName: 'Aisha Rahman',
         role: 'Staff',
-        roleBg: '#e6f4ea',
-        roleColor: '#1b6a38',
         time: '9:08 AM',
         message:
           "Submitted — 75% → 100%, everything attached. Let me know if anything's missing.",
@@ -92,8 +86,6 @@ const messagesData = [
         avatarColor: '#c73a24',
         userName: 'Rachel Koh',
         role: 'Staff',
-        roleBg: '#e6f4ea',
-        roleColor: '#1b6a38',
         time: '10:24 AM',
         message:
           "So proud of this one — you carried it. If you want a hand with the Q1 drive kickoff, I've got Thursday free.",
@@ -105,8 +97,6 @@ const messagesData = [
         avatarColor: '#183628',
         userName: 'Lee Chen',
         role: 'Manager',
-        roleBg: '#fef2e4',
-        roleColor: '#a87022',
         time: '11:50 AM',
         message:
           "Reviewing now. Star News coverage is a nice bonus. One quick note: could you confirm the photographer credit before I approve? Want to get that right.",
@@ -273,9 +263,9 @@ const FeedbackPage = () => {
 
           {/* Heads up info card */}
           {/* React-Bootstrap: Card - informational notice */}
-          <Card className="border-0 p-4 info-card" style={{ borderRadius: 'var(--radius-lg)' }}>
-            <h6 className="fw-bold mb-2" style={{ color: '#d69f4c', fontSize: '14px' }}>Heads up</h6>
-            <p className="mb-0" style={{ fontSize: '12px', lineHeight: '1.5', color: 'var(--sidebar-text)' }}>
+          <Card className="border-0 p-4 info-card" style={{ borderRadius: 'var(--radius-lg)', backgroundColor: '#0D3B2E' }}>
+            <h6 className="fw-bold mb-2" style={{ color: '#d69f4c', fontSize: '14px',fontStyle: 'italic' }}>Heads up</h6>
+            <p className="mb-0" style={{ fontSize: '12px', lineHeight: '1.5', color: 'var(--sidebar-text)'  }}>
               Threads auto-archive 30 days after a KPI is marked complete. Pin messages you want to keep.
             </p>
           </Card>
@@ -301,12 +291,12 @@ const FeedbackPage = () => {
                 className="rounded-pill border-0 text-sm fw-medium px-3"
                 style={{ backgroundColor: 'var(--card-bg)' }}
               >
-                {sortOrder} ▾
+                {sortOrder}  
               </Dropdown.Toggle>
               {/* React-Bootstrap: Dropdown.Menu and Dropdown.Item - sort options */}
               <Dropdown.Menu>
-                <Dropdown.Item onClick={() => setSortOrder('Oldest first')}>Oldest first</Dropdown.Item>
-                <Dropdown.Item onClick={() => setSortOrder('Newest first')}>Newest first</Dropdown.Item>
+                <Dropdown.Item onClick={() => setSortOrder('Oldest first')}>Oldest first </Dropdown.Item>
+                <Dropdown.Item onClick={() => setSortOrder('Newest first')}>Newest first </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </div>
@@ -335,8 +325,6 @@ const FeedbackPage = () => {
                   avatarColor={msg.avatarColor}
                   userName={msg.userName}
                   role={msg.role}
-                  roleBg={msg.roleBg}
-                  roleColor={msg.roleColor}
                   time={msg.time}
                   message={msg.message}
                   isPinned={msg.isPinned || false}

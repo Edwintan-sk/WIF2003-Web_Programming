@@ -14,8 +14,6 @@ import '../styles/theme.css';
  * @param {string}   avatarColor   - Text color for the avatar initials
  * @param {string}   userName      - Display name of the message author
  * @param {string}   role          - Role badge text (e.g. "Staff", "Manager")
- * @param {string}   roleBg        - Background color for the role badge
- * @param {string}   roleColor     - Text color for the role badge
  * @param {string}   time          - Timestamp string (e.g. "11:42 AM")
  * @param {string}   message       - The message body text
  * @param {boolean}  isPinned      - Whether the message is pinned
@@ -28,8 +26,6 @@ const ConversationMessage = ({
   avatarColor = '#C85A3A',
   userName,
   role,
-  roleBg = '#e6f4ea',
-  roleColor = '#1b6a38',
   time,
   message,
   isPinned = false,
@@ -37,6 +33,17 @@ const ConversationMessage = ({
   attachment = null,
 }) => {
   const [localReactions, setLocalReactions] = useState(reactions);
+
+  let computedRoleBg = '#e6f4ea';
+  let computedRoleColor = '#1b6a38';
+
+  if (role && role.toLowerCase() === 'staff') {
+    computedRoleBg = '#F9E7DE';
+    computedRoleColor = '#C85A3A';
+  } else if (role && role.toLowerCase() === 'manager') {
+    computedRoleBg = '#E4EDE7';
+    computedRoleColor = '#0D3B2E';
+  }
 
   const handleReact = (index) => {
     setLocalReactions((prev) =>
@@ -68,21 +75,23 @@ const ConversationMessage = ({
         <div className="d-flex align-items-center gap-2 mb-2">
           <span className="fw-bold text-sm">{userName}</span>
 
-          {/* React-Bootstrap: Badge - role indicator */}
-          <Badge
-            className="fw-bold"
+          {/* React-Bootstrap: Card - role indicator */}
+          <Card
+            className="fw-bold border-0"
             style={{
-              backgroundColor: roleBg,
-              color: roleColor,
+              backgroundColor: computedRoleBg,
+              color: computedRoleColor,
               fontSize: '9px',
               letterSpacing: '1.5px',
               padding: '3px 8px',
               textTransform: 'uppercase',
               fontFamily: 'monospace',
+              display: 'inline-block',
+              borderRadius: '50rem',
             }}
           >
             {role}
-          </Badge>
+          </Card>
 
           <span className="text-secondary" style={{ fontSize: '12px' }}>
             · {time}

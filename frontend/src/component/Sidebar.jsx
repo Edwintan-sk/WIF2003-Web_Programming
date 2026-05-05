@@ -26,8 +26,8 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
   const workspaceLinks = isManager ? managerLinks : staffLinks;
 
   const communicationLinks = [
-    { label: "Notifications", path: "/notifications", icon: true, badge: isManager ? "5" : "3" },
-    { label: "Feedback", path: "/feedback", icon: true },
+    { label: "Notifications", path: isManager ? "/manager/notifications" : "/staff/notifications", icon: true, badge: isManager ? "5" : "3" },
+    { label: "Feedback", path: isManager ? "/manager/feedback" : "/staff/feedback", icon: true },
     { label: isManager ? "Reports" : "Help & Support", path: isManager ? "/reports" : "/help", icon: true },
   ];
 
@@ -41,10 +41,19 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
     <div className="d-flex flex-column vh-100 p-4 shadow-lg z-1 sidebar-container">
       
       {/* Brand Logo Area */}
-      <div className="mb-5 d-flex align-items-center px-2">
-        <div className="me-3 brand-logo-box">K</div>
-        <h4 className="mb-0 text-white" style={{ fontFamily: 'var(--font-heading)' }}>Kempen</h4>
-        {isManager && <span className="ms-2 badge border text-uppercase" style={{fontSize: '10px', color: 'var(--sidebar-tag)'}}>Manager</span>}
+      <div className="mb-5 d-flex flex-column px-2">
+        <div className="d-flex align-items-center">
+          <div className="me-3 brand-logo-box">K</div>
+          <h4 className="m-0 lh-1 text-white" style={{ fontFamily: 'var(--font-heading)' }}>Kempen</h4>
+        </div>
+        {isManager && (
+          <span 
+            className="badge border text-uppercase mt-2" 
+            style={{ fontSize: '10px', color: 'var(--sidebar-tag)', width: 'fit-content' }}
+          >
+            Manager
+          </span>
+        )}
       </div>
 
       <div className="d-flex flex-column gap-5 flex-grow-1 overflow-auto overflow-x-hidden">
@@ -109,7 +118,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
             </div>
           </div>
 
-          <Nav.Link href="#" className="d-flex align-items-center gap-2 px-3 py-2 sidebar-link rounded-3 fw-normal">
+          <Nav.Link onClick={() => navigate('/login')} className="d-flex align-items-center gap-2 px-3 py-2 sidebar-link rounded-3 fw-normal" style={{ cursor: 'pointer' }}>
             <BoxArrowRight size={18} /> Logout
           </Nav.Link>
         </div>

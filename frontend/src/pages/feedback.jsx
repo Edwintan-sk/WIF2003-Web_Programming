@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Row, Col, Card, Badge, Button, ProgressBar, Form, Dropdown } from 'react-bootstrap';
 /* React-Bootstrap-Icons */
 import { ChevronLeft, CircleFill, ArrowRight } from 'react-bootstrap-icons';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import Sidebar from '../component/Sidebar';
 import '../styles/theme.css';
 
 /* Reusable Components */
@@ -129,8 +130,21 @@ const FeedbackPage = () => {
 
   const totalMessages = messagesData.reduce((sum, group) => sum + group.messages.length, 0);
 
+  // Determine role based on current URL path
+  const location = useLocation();
+  const role = location.pathname.startsWith('/manager') ? 'manager' : 'staff';
+
   return (
-    <main>
+    <div className="d-flex">
+      <Sidebar role={role} />
+
+      <main style={{
+        marginLeft: 'var(--sidebar-width)',
+        flex: 1,
+        padding: '40px 60px',
+        backgroundColor: 'var(--main-bg)',
+        minHeight: '100vh'
+      }}>
       {/* ── Page Header ──────────────────────────────────────────── */}
       <header className="d-flex justify-content-between align-items-start mb-4">
         <div>
@@ -389,7 +403,8 @@ const FeedbackPage = () => {
           </Card>
         </Col>
       </Row>
-    </main>
+      </main>
+    </div>
   );
 };
 

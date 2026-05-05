@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Container, Button, Badge, ButtonGroup } from 'react-bootstrap';
 /* React-Bootstrap-Icons: Envelope */
 import { Envelope } from 'react-bootstrap-icons';
+import { useLocation } from 'react-router-dom';
+import Sidebar from '../component/Sidebar';
 import '../styles/theme.css';
 
 /* Reusable Components */
@@ -112,8 +114,21 @@ const NotificationDashboard = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 
+  // Determine role based on current URL path
+  const location = useLocation();
+  const role = location.pathname.startsWith('/manager') ? 'manager' : 'staff';
+
   return (
-    <main>
+    <div className="d-flex">
+      <Sidebar role={role} />
+
+      <main style={{
+        marginLeft: 'var(--sidebar-width)',
+        flex: 1,
+        padding: '40px 60px',
+        backgroundColor: 'var(--main-bg)',
+        minHeight: '100vh'
+      }}>
       {/* Page Header */}
       <header className="d-flex justify-content-between align-items-start mb-5">
         <div>
@@ -198,7 +213,8 @@ const NotificationDashboard = () => {
           </div>
         )}
       </div>
-    </main>
+      </main>
+    </div>
   );
 };
 

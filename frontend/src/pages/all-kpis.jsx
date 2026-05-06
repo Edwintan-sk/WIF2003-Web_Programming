@@ -52,7 +52,7 @@ const AllKPIs = () => {
         <p className="sidebar-header small mb-1">Workspace</p>
         <div className="d-flex justify-content-between align-items-center mb-5">
           <h3 className="serif-font mb-0">All KPIs</h3>
-          <Button className="btn-orange">+ New KPI</Button>
+          <Button className="btn-orange" onClick={() => navigate('/manager/all-kpis/new')}>+ New KPI</Button>
         </div>
 
         <p className="text-muted mb-4">KPI directory – All KPIs across departments – create, edit, and manage records</p>

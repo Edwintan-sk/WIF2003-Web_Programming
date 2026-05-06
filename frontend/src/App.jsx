@@ -1,7 +1,11 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import StaffDashboard from './pages/staff-dashboard';
 import ManagerDashboard from './pages/manager-dashboard';
 import AllKPIs from './pages/all-kpis';
+import VerificationInbox from './pages/verification-inbox';
+import EvidenceDetailView from './pages/evidence-detail-view';
+import StaffAssignedKPI from './pages/staff-assigned-kpi';
+import StaffSubmitProgress from './pages/staff-submit-progress';
 import Login from './pages/login';
 import Register from './pages/register';
 import NotificationDashboard from './pages/notification-dashboard';
@@ -16,8 +20,10 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         {/* Staff Routes */}
-        <Route path="/" element={<StaffDashboard />} />
+        <Route path="/" element={<Navigate to="/staff" replace />} />
         <Route path="/staff" element={<StaffDashboard />} />
+        <Route path="/staff/kpis" element={<StaffAssignedKPI />} />
+        <Route path="/staff/submit" element={<StaffSubmitProgress />} />
         {/* Placeholder for uncompleted Staff pages */}
         <Route path="/staff/kpis" element={<StaffDashboard />} />
         <Route path="/staff/submit" element={<StaffDashboard />} />
@@ -33,7 +39,9 @@ function App() {
         <Route path="/manager/all-kpis" element={<AllKPIs />} />
         {/* Placeholder for uncompleted Manager pages */}
         <Route path="/manager/assign" element={<ManagerDashboard />} />
-        <Route path="/manager/verify" element={<ManagerDashboard />} />
+        <Route path="/manager/verify" element={<VerificationInbox />} />
+        <Route path="/manager/verification-inbox" element={<VerificationInbox />} />
+        <Route path="/manager/evidence-detail/:id" element={<EvidenceDetailView />} />
 
         {/* Manager Individual Communication Routes */}
         <Route path="/manager/notifications" element={<NotificationDashboard />} />

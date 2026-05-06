@@ -13,7 +13,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
     { label: "Team dashboard", path: "/manager", icon: true },
     { label: "All KPIs", path: "/manager/all-kpis", icon: true, badge: "24" },
     { label: "Assignment center", path: "/manager/assign", icon: true },
-    { label: "Verification inbox", path: "/manager/verify", icon: true, badge: "8" },
+    { label: "Verification inbox", path: "/manager/verification-inbox", icon: true, badge: "8" },
   ];
 
   const staffLinks = [
@@ -44,7 +44,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
       <div className="mb-5 d-flex flex-column px-2">
         <div className="d-flex align-items-center">
           <div className="me-3 brand-logo-box">K</div>
-          <h4 className="m-0 lh-1 text-white" style={{ fontFamily: 'var(--font-heading)' }}>Kempen</h4>
+          <h4 className="m-0 lh-1 text-white" style={{ fontFamily: 'var(--font-heading)' }}>KP EYE</h4>
         </div>
         {isManager && (
           <span 

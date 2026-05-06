@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\kpi management system\\\\WIF2003-Web_Programming\\\\frontend\\\\src\" -Recurse)",
+      "Bash(Select-Object FullName)"
+    ]
+  }
+}

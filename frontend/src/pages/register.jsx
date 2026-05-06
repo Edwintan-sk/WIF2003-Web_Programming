@@ -48,7 +48,7 @@ function Register() {
       >
         <div className="brand-row">
           <div className="brand-mark">K</div>
-          <div className="brand-name">Kempen</div>
+          <div className="brand-name">KP EYE</div>
         </div>
 
         <div className="stepper">
@@ -99,7 +99,7 @@ function StepRole({ form, update }) {
   return (
     <>
       <h1 className="auth-title">What is your role?</h1>
-      <p className="auth-subtitle">Tell us how you'll be using Kempen so we can set up your account.</p>
+      <p className="auth-subtitle">Tell us how you'll be using KP EYE so we can set up your account.</p>
 
       <div className="role-choice-grid">
         <button
@@ -422,7 +422,7 @@ function StepReview({ form, update }) {
           onChange={(e) => update('confirmed', e.target.checked)}
         />
         <span>
-          I confirm that the information above is accurate and authorise Kempen to create my account
+          I confirm that the information above is accurate and authorise KP EYE to create my account
           based on these details.
         </span>
       </label>

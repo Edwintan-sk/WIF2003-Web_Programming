@@ -19,7 +19,7 @@ function Login() {
       <form className="auth-card" onSubmit={handleSubmit}>
         <div className="brand-row">
           <div className="brand-mark">K</div>
-          <div className="brand-name">Kempen</div>
+          <div className="brand-name">KP EYE</div>
         </div>
 
         <h1 className="auth-title">Welcome back</h1>

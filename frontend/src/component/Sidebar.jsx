@@ -44,7 +44,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
       <div className="mb-5 d-flex flex-column px-2">
         <div className="d-flex align-items-center">
           <div className="me-3 brand-logo-box">K</div>
-          <h4 className="m-0 lh-1 text-white" style={{ fontFamily: 'var(--font-heading)' }}>Kempen</h4>
+          <h4 className="m-0 lh-1 text-white" style={{ fontFamily: 'var(--font-heading)' }}>KP EYE</h4>
         </div>
         {isManager && (
           <span 

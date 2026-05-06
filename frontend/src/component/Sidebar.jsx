@@ -13,7 +13,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
     { label: "Team dashboard", path: "/manager", icon: true },
     { label: "All KPIs", path: "/manager/all-kpis", icon: true, badge: "24" },
     { label: "Assignment center", path: "/manager/assign", icon: true },
-    { label: "Verification inbox", path: "/manager/verify", icon: true, badge: "8" },
+    { label: "Verification inbox", path: "/manager/verification-inbox", icon: true, badge: "8" },
   ];
 
   const staffLinks = [

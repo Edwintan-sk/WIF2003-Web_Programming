@@ -26,9 +26,6 @@ function App() {
         <Route path="/staff" element={<StaffDashboard />} />
         <Route path="/staff/kpis" element={<StaffAssignedKPI />} />
         <Route path="/staff/submit" element={<StaffSubmitProgress />} />
-        {/* Placeholder for uncompleted Staff pages */}
-        <Route path="/staff/kpis" element={<StaffDashboard />} />
-        <Route path="/staff/submit" element={<StaffDashboard />} />
         <Route path="/staff/archive" element={<StaffDashboard />} />
         
         {/* Staff Individual Communication Routes */}
@@ -42,10 +39,6 @@ function App() {
         <Route path="/manager/all-kpis/new" element={<CreateEditKpi />} />
         <Route path="/manager/all-kpis/edit/:kpiId" element={<CreateEditKpi />} />
         <Route path="/manager/assign" element={<AssignmentCenter />} />
-        {/* Placeholder for uncompleted Manager pages */}
-        <Route path="/manager/verify" element={<ManagerDashboard />} />
-        <Route path="/manager/assign" element={<ManagerDashboard />} />
-        <Route path="/manager/verify" element={<VerificationInbox />} />
         <Route path="/manager/verification-inbox" element={<VerificationInbox />} />
         <Route path="/manager/evidence-detail/:id" element={<EvidenceDetailView />} />
 

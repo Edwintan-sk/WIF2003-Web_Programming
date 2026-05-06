@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Form, InputGroup, Row, Col } from 'react-bootstrap';
 import { Search, ArrowRight, Trash } from 'react-bootstrap-icons';
+import Sidebar from '../component/Sidebar';
 import '../styles/theme.css'; 
 
 export default function StaffSubmitProgress() {
@@ -35,8 +36,10 @@ export default function StaffSubmitProgress() {
   }
 
   return (
-        <main>
-            <header className="d-flex justify-content-between align-items-start mb-5">
+        <div className="d-flex">
+            <Sidebar role="staff" />
+            <main className="staff-main-content">
+                <header className="d-flex justify-content-between align-items-start mb-5">
                 <div>
                   <p className="text-secondary fw-bold text-uppercase staff-text-micro mb-1">Workspace / Submit Progress</p>
                   <h1 className="fw-bold m-0 fs-4">Update: Host 4 community outreach events</h1>
@@ -207,8 +210,9 @@ export default function StaffSubmitProgress() {
                   </p>
                 </div>
               </Col>
-            </Row>
-        </main>
+                </Row>
+            </main>
+        </div>
   );
 }
 

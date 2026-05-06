@@ -907,3 +907,267 @@ h1, h2, h3 {
 .confirm-box input[type="checkbox"] {
   margin-top: 2px;
 }
+
+
+/* ========================================= */
+/* === PREFIXED STAFF UI STYLES =========== */
+/* ========================================= */
+
+.staff-text-micro {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+.staff-text-xs {
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+.staff-text-sm {
+  font-size: 14px;
+}
+.staff-text-mini {
+  font-size: 12px;
+}
+.staff-heading-greeting {
+  font-size: 2.75rem;
+  color: var(--text-main);
+}
+.staff-text-primary-dark {
+  color: var(--sidebar-bg) !important;
+}
+.staff-text-note {
+  color: #c0d6cb;
+  line-height: 1.5;
+}
+.staff-text-overline {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.staff-main-content {
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  background-color: var(--main-bg);
+  flex: 1;
+  padding: 40px 60px;
+  overflow-y: auto;
+}
+/* Filter Buttons (The Pill) */
+.staff-filter-btn {
+  transition: all 0.2s ease;
+  background-color: #FFFFFF !important;
+  color: var(--text-muted);
+  border: 1px solid transparent; 
+}
+.staff-filter-btn.active {
+  background-color: var(--text-main) !important;
+  color: white !important;
+}
+.staff-filter-btn:not(.active):hover {
+  background-color: #f8f9fa !important;
+}
+.staff-filter-btn .badge {
+  transition: all 0.2s ease;
+  background-color: #E2EFE9 !important; /* Pale green inactive */
+  color: #183628 !important; /* Dark green text inactive */
+  border: none !important;
+}
+/* When the parent button is active, change the badge inside it */
+.staff-filter-btn.active .badge {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+}
+.staff-kpi-card-wrapper {
+  border-radius: 18px;
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e8e4d9;
+  background-color: var(--card-bg);
+  overflow: hidden;
+}
+.staff-kpi-row {
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #e8e4d9;
+}
+.staff-kpi-row:last-child {
+  border-bottom: none;
+}
+.staff-kpi-row:hover {
+  background-color: #fcfbfa;
+}
+/* --- KPI Tag --- */
+.staff-kpi-tag {
+  padding: 0.4em 0.6em;
+}
+.staff-kpi-tag-outline {
+  letter-spacing: 0.05em;
+  border: 1px solid #e8e4d9;
+  background-color: #FFFFFF;
+}
+/* --- Action Arrow Button --- */
+.staff-btn-action-arrow {
+  background-color: #f0eee6 !important;
+  width: 36px;
+  height: 36px;
+  transition: background-color 0.2s ease;
+}
+.staff-btn-action-arrow:hover {
+  background-color: #e2e0d8 !important; 
+}
+/* --- Type Filter Tabs --- */
+.staff-tab-btn {
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+.staff-tab-btn.active-tab {
+  background-color: var(--text-main) !important;
+  color: white !important;
+}
+.staff-hide-scrollbar::-webkit-scrollbar { 
+  display: none; 
+}
+.staff-hide-scrollbar { 
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+.staff-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.staff-custom-card {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.02);
+  border: 1px solid #e8e4d9;
+  background-color: var(--card-bg);
+}
+.staff-info-card {
+  background-color: var(--sidebar-bg);
+  color: white;
+  border: none;
+}
+/* Form Elements */
+.staff-textarea-custom {
+  background-color: #F8F7F3 !important;
+  border: 1px solid #e8e4d9 !important;
+  border-radius: 8px;
+  resize: none;
+  font-size: 0.9rem;
+  padding: 1rem !important;
+  color: var(--text-main);
+}
+.staff-textarea-custom:focus {
+  box-shadow: none !important;
+  border-color: var(--sidebar-tag) !important;
+}
+.staff-dashed-dropzone {
+  border: 1px dashed #d1cbbd;
+  border-radius: 12px;
+  background-color: #F8F7F3;
+  text-align: center;
+  padding: 2.5rem;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.staff-dashed-dropzone:hover {
+  background-color: #f0eee6;
+  border-color: var(--sidebar-tag);
+}
+/* Custom Buttons */
+.staff-btn-primary-dark {
+  background-color: var(--sidebar-bg) !important;
+  color: white !important;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.staff-btn-primary-dark:hover {
+  background-color: #05100c !important;
+  color: white !important;
+}
+.staff-btn-outline-custom {
+  border: 2px solid #e8e4d9 !important;
+  background-color: white;
+  color: var(--text-main);
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.staff-btn-outline-custom:hover {
+  background-color: #f8f9fa;
+  border-color: #d1cbbd;
+}
+/* Custom Range Slider */
+.staff-custom-range {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 12px;
+  border-radius: 6px;
+  outline: none;
+  padding: 0;
+  margin: 0;
+}
+.staff-custom-range:focus {
+  outline: none;
+}
+.staff-custom-range::-webkit-slider-runnable-track {
+  height: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+.staff-custom-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: var(--sidebar-bg);
+  cursor: pointer;
+  border: none;
+  box-shadow: none;
+  margin-top: 0px;
+}
+.staff-progress-track-md {
+  height: 8px;
+  background-color: var(--light-gray);
+}
+/* Timeline Component */
+.staff-timeline-track {
+  border-left: 2px solid var(--light-gray);
+  padding-right: 0.5rem;
+  margin-left: 0.5rem;
+}
+.staff-timeline-dot {
+  position: absolute;
+  left: -6px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+  z-index: 1;
+}
+.staff-timeline-line {
+  height: 2px;
+  margin: 0 4px;
+}
+.staff-timeline-circle-current {
+  stroke: #597495;
+  stroke-width: 1px;
+}
+.staff-stat-dot {
+  width: 8px;
+  height: 8px;
+}
+.staff-status-dot-sm {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+.staff-badge-circle-24 {
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+}

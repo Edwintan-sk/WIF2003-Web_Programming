@@ -409,8 +409,10 @@ h1, h2, h3 {
 }
 
 /* Button Styles */
-.btn-orange {
-  background-color: var(--accent-orange);
+/*uses .btn.btn for extra weight to override the default bootstrap primary*/
+.btn.btn-orange {
+  background-color: #C73F1F;
+  border-color: #C73F1F;
   border: none;
   color: white;
   font-weight: 600;
@@ -420,13 +422,15 @@ h1, h2, h3 {
   transition: all 0.2s ease;
 }
 
-.btn-orange:hover {
+.btn.btn-orange:hover {
   background-color: #D74528;
+  border-color: #D74528;
   color: white;
 }
 
-.btn-orange:active {
+.btn.btn-orange:active {
   background-color: #C73F1F;
+  border-color: #C73F1F;
 }
 
 .btn-light {

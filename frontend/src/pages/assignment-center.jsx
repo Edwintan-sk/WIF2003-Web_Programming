@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Row, Col, Card, Form, Button, Badge, Nav, InputGroup,
-} from 'react-bootstrap'; // react-bootstrap
-import { Search, PlusLg } from 'react-bootstrap-icons';
+  Row, Col, Card, Form, Button, Nav, InputGroup,
+} from 'react-bootstrap';
+import { Search, ArrowRight } from 'react-bootstrap-icons';
 import Sidebar from '../component/Sidebar';
-import KpiSelectItem from '../component/KpiSelectItem';   // reusable component
-import StaffAssigneeRow from '../component/StaffAssigneeRow'; // reusable component
+import KpiSelectItem from '../component/KpiSelectItem';
+import StaffAssigneeRow from '../component/StaffAssigneeRow';
+import CategoryBadge from '../component/CategoryBadge';
 import '../styles/theme.css';
 
 // ─── Mock data (replace with API calls) ──────────────────────────────────────
@@ -16,83 +17,54 @@ const KPI_LIST = [
     id: 1,
     title: 'Host 4 community outreach events',
     category: 'Target',
-    deadline: 'Nov 19',
-    assignees: ['AS', 'SR', 'RK'],
+    tag: 'Community',
+    deadline: 'Nov 30',
+    assignees: ['AR'],
     status: null,
     totalSlots: 4,
+    targetValue: '4 community events',
+    progressValue: '3 / 4 events hosted',
     description:
-      'Organize and facilitate at least 4 community outreach events that promote company initiatives and engage local stakeholders. Each event must have a minimum of 25 attendees.',
+      'Public-facing engagements with local partners and community groups. Each event counts as one unit toward the 4-event target.',
     progress: [
-      { initials: 'AS', name: 'AakarSerman', progress: 70 },
-      { initials: 'SR', name: 'SR Chen',     progress: 70 },
-      { initials: 'RK', name: 'Ravi Kumar',  progress: 45 },
+      { initials: 'AR', name: 'Aisha Rahman', role: 'Communications', progress: 75, text: '3/4' },
     ],
   },
   {
     id: 2,
     title: 'Publish 12 editorial articles',
     category: 'Target',
+    tag: 'Content',
     deadline: 'Nov 30',
-    assignees: ['NG'],
-    status: 'Success',
+    assignees: [],
+    status: null,
     totalSlots: 2,
+    targetValue: '12 articles',
+    progressValue: '0 / 12 articles published',
     description: 'Publish 12 high-quality editorial articles across company platforms within the quarter.',
-    progress: [{ initials: 'NG', name: 'Nguyen Tran', progress: 100 }],
+    progress: [],
   },
   {
     id: 3,
-    title: 'Launch newsletter redesign project',
+    title: 'Launch website redesign project',
     category: 'Project',
-    deadline: 'Dec 5',
+    tag: 'Project Mgmt',
+    deadline: 'Feb 28',
     assignees: [],
     status: null,
-    totalSlots: 3,
-    description: 'Complete a full redesign of the company newsletter template and migrate to the new format.',
+    totalSlots: 1,
+    targetValue: 'Go-live by Feb 28',
+    progressValue: 'In progress',
+    description: 'Complete a full redesign of the company website.',
     progress: [],
-  },
-  {
-    id: 4,
-    title: 'Grow newsletter to 5,000 subscribers',
-    category: 'Target',
-    deadline: 'Dec 31',
-    assignees: [],
-    status: null,
-    totalSlots: 2,
-    description: 'Increase newsletter subscriber count to 5,000 through organic content campaigns.',
-    progress: [],
-  },
-  {
-    id: 5,
-    title: 'Secure 3 new media partnerships',
-    category: 'Target',
-    deadline: 'Nov 25',
-    assignees: ['DF', 'RK'],
-    status: null,
-    totalSlots: 2,
-    description: 'Identify and secure partnership agreements with 3 new media outlets before year-end.',
-    progress: [
-      { initials: 'DF', name: 'Diana Fern', progress: 60 },
-      { initials: 'RK', name: 'Ravi Kumar', progress: 40 },
-    ],
-  },
-  {
-    id: 6,
-    title: 'Launch internal brand handbook',
-    category: 'Project',
-    deadline: 'Jan 15',
-    assignees: ['NG'],
-    status: 'Project Report',
-    totalSlots: 2,
-    description: 'Develop and publish the internal brand guidelines handbook for all departments.',
-    progress: [{ initials: 'NG', name: 'Nguyen Tran', progress: 80 }],
   },
 ];
 
 const ALL_STAFF = [
-  { initials: 'MW', name: 'Marcus Wong' },
-  { initials: 'PL', name: 'Priya Lal'  },
-  { initials: 'JT', name: 'James Tan'  },
-  { initials: 'EC', name: 'Elena Cruz' },
+  { initials: 'MW', name: 'Marcus Wong', role: 'Design' },
+  { initials: 'PL', name: 'Priya Lal', role: 'Marketing'  },
+  { initials: 'JT', name: 'James Tan', role: 'Engineering'  },
+  { initials: 'EC', name: 'Elena Cruz', role: 'Communications' },
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -121,7 +93,6 @@ const AssignmentCenter = () => {
 
   return (
     <div className="d-flex">
-      {/* Sidebar — custom component (wraps react-bootstrap Nav) */}
       <Sidebar role="manager" />
 
       <main
@@ -133,26 +104,23 @@ const AssignmentCenter = () => {
           minHeight: '100vh',
         }}
       >
-        {/* ── Page header ─────────────────────────────────────────── */}
-        <p className="sidebar-header small mb-1">Workspace</p>
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h3 className="serif-font mb-0">Assignment center</h3>
+        <p className="sidebar-header small mb-1" style={{ letterSpacing: '1px' }}>WORKSPACE</p>
+        <div className="d-flex justify-content-between align-items-center mb-5">
+          <h3 className="serif-font mb-0" style={{ fontWeight: 700 }}>Assignment center</h3>
 
           <div className="d-flex align-items-center gap-3">
-            {/* View-mode toggle — Nav (react-bootstrap) */}
             <Nav
               style={{
-                backgroundColor: '#EAE3D2',
+                backgroundColor: 'transparent',
                 padding: '4px',
                 borderRadius: '8px',
-                gap: '2px',
+                gap: '4px',
               }}
             >
               {[
                 { key: 'by-kpi',   label: 'By KPI'   },
                 { key: 'by-staff', label: 'By staff'  },
               ].map(({ key, label }) => (
-                /* Nav.Link — react-bootstrap */
                 <Nav.Link
                   key={key}
                   onClick={() => setActiveTab(key)}
@@ -161,8 +129,8 @@ const AssignmentCenter = () => {
                     fontWeight: 600,
                     padding: '6px 14px',
                     borderRadius: '6px',
-                    color:           activeTab === key ? '#fff' : 'var(--text-muted)',
-                    backgroundColor: activeTab === key ? 'var(--sidebar-bg)' : 'transparent',
+                    color:           activeTab === key ? '#fff' : '#1A1A1A',
+                    backgroundColor: activeTab === key ? '#1A1A1A' : 'transparent',
                     transition: 'all 0.15s ease',
                   }}
                 >
@@ -171,175 +139,183 @@ const AssignmentCenter = () => {
               ))}
             </Nav>
 
-            {/* Button — react-bootstrap */}
             <Button
-              className="btn-orange d-flex align-items-center gap-1"
+              style={{ backgroundColor: '#C73F1F', border: 'none', fontSize: '13px', fontWeight: 600, padding: '8px 16px', borderRadius: '6px' }}
               onClick={() => navigate('/manager/all-kpis/new')}
             >
-              <PlusLg size={14} /> Assign KPI
+              + New KPI
             </Button>
           </div>
         </div>
 
-        {/* ── Split layout ─────────────────────────────────────────── */}
-        {/* Row — react-bootstrap */}
-        <Row className="g-3" style={{ minHeight: 'calc(100vh - 200px)' }}>
+        <Row className="g-4" style={{ minHeight: 'calc(100vh - 200px)' }}>
+          {/* LEFT PANEL */}
+          <Col md={5} lg={4} style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="mb-4">
+              <h4 className="serif-font mb-1" style={{ fontWeight: 700 }}>Select a KPI</h4>
+              <p style={{ fontSize: '12px', color: '#6C757D', marginBottom: '24px' }}>24 KPIs · 18 target · 6 project. Click to assign.</p>
 
-          {/* ── LEFT: KPI list panel ───────────────────────────────── */}
-          {/* Col — react-bootstrap */}
-          <Col md={4} style={{ display: 'flex', flexDirection: 'column' }}>
-            {/* Card — react-bootstrap */}
-            <Card className="custom-card flex-grow-1" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-
-              {/* Card.Header — react-bootstrap */}
-              <Card.Header
-                style={{
-                  backgroundColor: 'transparent',
-                  borderBottom: '1px solid #F0EAE0',
-                  padding: '16px 20px 14px',
-                }}
-              >
-                <p className="section-label mb-1">Select a KPI</p>
-
-                {/* Search — InputGroup (react-bootstrap) */}
-                <InputGroup
-                  className="mb-2"
+              <div className="d-flex gap-2 mb-4 flex-wrap">
+                <Card
+                  onClick={() => setFilterCategory('All')}
+                  body={false}
                   style={{
-                    borderRadius: '8px',
-                    border: '1px solid #E8E1D3',
-                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    backgroundColor: filterCategory === 'All' ? '#1A1A1A' : '#FFFFFF',
+                    color: filterCategory === 'All' ? '#fff' : '#1A1A1A',
+                    border: filterCategory === 'All' ? '1px solid #1A1A1A' : '1px solid #E8E1D3',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: 'none'
                   }}
                 >
-                  {/* InputGroup.Text — react-bootstrap */}
-                  <InputGroup.Text style={{ backgroundColor: '#F9F7F4', border: 'none' }}>
-                    <Search size={13} color="var(--text-muted)" />
-                  </InputGroup.Text>
-                  {/* Form.Control — react-bootstrap */}
-                  <Form.Control
-                    placeholder="Filter this KPI"
-                    value={kpiSearch}
-                    onChange={(e) => setKpiSearch(e.target.value)}
-                    style={{ border: 'none', backgroundColor: '#F9F7F4', fontSize: '13px' }}
+                  All <span style={{ backgroundColor: filterCategory === 'All' ? '#333' : '#F0EAE0', color: filterCategory === 'All' ? '#fff' : '#1A1A1A', borderRadius: '50%', padding: '2px 6px', fontSize: '10px' }}>24</span>
+                </Card>
+                <Card
+                  onClick={() => setFilterCategory('Target')}
+                  body={false}
+                  style={{
+                    cursor: 'pointer',
+                    backgroundColor: filterCategory === 'Target' ? '#1A1A1A' : '#FFFFFF',
+                    color: filterCategory === 'Target' ? '#fff' : '#1A1A1A',
+                    border: filterCategory === 'Target' ? '1px solid #1A1A1A' : '1px solid #E8E1D3',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: 'none'
+                  }}
+                >
+                  <span style={{ color: '#DC3545' }}>●</span> Target <span style={{ backgroundColor: '#F0EAE0', color: '#1A1A1A', borderRadius: '50%', padding: '2px 6px', fontSize: '10px' }}>18</span>
+                </Card>
+                <Card
+                  onClick={() => setFilterCategory('Project')}
+                  body={false}
+                  style={{
+                    cursor: 'pointer',
+                    backgroundColor: filterCategory === 'Project' ? '#1A1A1A' : '#FFFFFF',
+                    color: filterCategory === 'Project' ? '#fff' : '#1A1A1A',
+                    border: filterCategory === 'Project' ? '1px solid #1A1A1A' : '1px solid #E8E1D3',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: 'none'
+                  }}
+                >
+                  <span style={{ color: '#0D6EFD' }}>●</span> Project <span style={{ backgroundColor: '#F0EAE0', color: '#1A1A1A', borderRadius: '50%', padding: '2px 6px', fontSize: '10px' }}>6</span>
+                </Card>
+              </div>
+
+              <InputGroup
+                style={{
+                  borderRadius: '8px',
+                  border: '1px solid #E8E1D3',
+                  overflow: 'hidden',
+                }}
+              >
+                <InputGroup.Text style={{ backgroundColor: '#FFFFFF', border: 'none', paddingLeft: '16px' }}>
+                  <Search size={14} color="#6C757D" />
+                </InputGroup.Text>
+                <Form.Control
+                  placeholder="Search by title or tag..."
+                  value={kpiSearch}
+                  onChange={(e) => setKpiSearch(e.target.value)}
+                  style={{ border: 'none', backgroundColor: '#FFFFFF', fontSize: '13px', padding: '12px 16px 12px 8px' }}
+                />
+              </InputGroup>
+            </div>
+
+            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1, paddingRight: '8px' }}>
+              {filteredKpis.length > 0 ? (
+                filteredKpis.map((kpi) => (
+                  <KpiSelectItem
+                    key={kpi.id}
+                    kpi={kpi}
+                    isSelected={kpi.id === selectedKpiId}
+                    onClick={() => setSelectedKpiId(kpi.id)}
                   />
-                </InputGroup>
-
-                {/* Category filter badges */}
-                <div className="d-flex gap-1 flex-wrap">
-                  {['All', 'Target', 'Project'].map((cat) => (
-                    /* Badge (clickable filter) — react-bootstrap */
-                    <Badge
-                      key={cat}
-                      onClick={() => setFilterCategory(cat)}
-                      style={{
-                        cursor: 'pointer',
-                        backgroundColor: filterCategory === cat ? 'var(--sidebar-bg)' : '#EAE3D2',
-                        color:           filterCategory === cat ? '#fff' : 'var(--text-muted)',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        padding: '5px 10px',
-                        borderRadius: '6px',
-                      }}
-                    >
-                      {cat === 'All' ? 'All' : `● ${cat}`}
-                    </Badge>
-                  ))}
-                </div>
-              </Card.Header>
-
-              {/* Card.Body — react-bootstrap */}
-              <Card.Body style={{ overflowY: 'auto', padding: '8px' }}>
-                {filteredKpis.length > 0 ? (
-                  filteredKpis.map((kpi) => (
-                    /* KpiSelectItem — reusable component from /component/KpiSelectItem.jsx */
-                    <KpiSelectItem
-                      key={kpi.id}
-                      kpi={kpi}
-                      isSelected={kpi.id === selectedKpiId}
-                      onClick={() => setSelectedKpiId(kpi.id)}
-                    />
-                  ))
-                ) : (
-                  <p
-                    className="text-muted text-center"
-                    style={{ fontSize: '13px', padding: '20px 0' }}
-                  >
-                    No KPIs match your filter.
-                  </p>
-                )}
-              </Card.Body>
-            </Card>
+                ))
+              ) : (
+                <p className="text-muted text-center" style={{ fontSize: '13px', padding: '20px 0' }}>
+                  No KPIs match your filter.
+                </p>
+              )}
+            </div>
           </Col>
 
-          {/* ── RIGHT: KPI detail panel ────────────────────────────── */}
-          {/* Col — react-bootstrap */}
-          <Col md={8} style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* RIGHT PANEL */}
+          <Col md={7} lg={8} style={{ display: 'flex', flexDirection: 'column' }}>
             {selectedKpi ? (
-              /* Card — react-bootstrap */
-              <Card
-                className="custom-card flex-grow-1"
-                style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-              >
-                {/* Card.Body — react-bootstrap */}
-                <Card.Body style={{ overflowY: 'auto', padding: '28px 36px' }}>
+              <Card className="custom-card flex-grow-1" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', borderRadius: '16px' }}>
+                <Card.Body style={{ overflowY: 'auto', padding: '40px 48px' }}>
 
-                  {/* Category + deadline badges */}
+                  {/* Top badges */}
                   <div className="d-flex align-items-center gap-2 mb-3">
-                    {/* Badge — react-bootstrap */}
-                    <Badge
-                      style={{
-                        backgroundColor: '#E8F0ED',
-                        color: '#0B5E3A',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        padding: '5px 10px',
-                        borderRadius: '6px',
-                      }}
-                    >
-                      {selectedKpi.category}
-                    </Badge>
-                    {/* Badge — react-bootstrap */}
-                    <Badge
-                      style={{
-                        backgroundColor: '#F9F7F4',
-                        color: 'var(--text-muted)',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        padding: '5px 10px',
-                        borderRadius: '6px',
-                        border: '1px solid #E8E1D3',
-                      }}
-                    >
-                      Due {selectedKpi.deadline}
-                    </Badge>
+                    <CategoryBadge category={selectedKpi.tag || selectedKpi.category} />
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#A8A092', letterSpacing: '1px' }}>
+                      {selectedKpi.category.toUpperCase()}
+                    </span>
+                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#1A1A1A', marginLeft: '4px' }}>
+                      · Due {selectedKpi.deadline}
+                    </span>
                   </div>
 
-                  {/* KPI title */}
-                  <h4 className="serif-font mb-2">{selectedKpi.title}</h4>
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      color: 'var(--text-muted)',
-                      lineHeight: 1.6,
-                      marginBottom: '24px',
-                    }}
-                  >
+                  <h3 className="serif-font mb-4" style={{ fontWeight: 700 }}>{selectedKpi.title}</h3>
+                  
+                  {/* Info box */}
+                  <div style={{ backgroundColor: '#F9F7F4', border: '1px solid #E8E1D3', borderRadius: '8px', padding: '20px 24px', display: 'flex', gap: '48px', marginBottom: '24px' }}>
+                    <div>
+                      <p style={{ fontSize: '10px', fontWeight: 700, color: '#A8A092', letterSpacing: '1.5px', marginBottom: '6px' }}>TARGET</p>
+                      <p style={{ fontSize: '16px', fontWeight: 600, color: '#0B5E3A', margin: 0 }}>{selectedKpi.targetValue}</p>
+                    </div>
+                    {selectedKpi.progressValue && (
+                      <div>
+                        <p style={{ fontSize: '10px', fontWeight: 700, color: '#A8A092', letterSpacing: '1.5px', marginBottom: '6px' }}>AGGREGATED PROGRESS</p>
+                        <p style={{ fontSize: '16px', fontWeight: 600, color: '#1A1A1A', margin: 0 }}>
+                          {selectedKpi.progressValue.split(' ').map((word, i) => 
+                            i < 2 ? <span key={i}>{word} </span> : <span key={i} style={{ color: '#6C757D', fontWeight: 400, fontSize: '13px' }}>{word} </span>
+                          )}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  <p style={{ fontSize: '13px', color: '#6C757D', lineHeight: 1.6, marginBottom: '32px' }}>
                     {selectedKpi.description}
                   </p>
 
+                  <hr style={{ borderColor: '#E8E1D3', margin: '0 0 32px 0' }} />
+
                   {/* Currently assigned section */}
-                  <div className="mb-2">
-                    <div className="d-flex align-items-center justify-content-between mb-1">
-                      <span style={{ fontSize: '13px', fontWeight: 600 }}>
-                        Currently assigned:{' '}
-                        <span style={{ color: 'var(--accent-orange)' }}>
-                          {selectedKpi.progress.length}/{selectedKpi.totalSlots}
+                  <div className="mb-4">
+                    <div className="d-flex align-items-center justify-content-between mb-3">
+                      <div className="d-flex align-items-center gap-2">
+                        <span style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>
+                          Currently assigned
                         </span>
-                      </span>
-                      {/* Button (link) — react-bootstrap */}
+                        <span style={{ backgroundColor: '#E8F0ED', color: '#0B5E3A', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>
+                          {selectedKpi.progress.length}
+                        </span>
+                      </div>
                       <Button
                         variant="link"
                         className="p-0 text-decoration-none"
-                        style={{ fontSize: '12px', color: 'var(--accent-orange)' }}
+                        style={{ fontSize: '13px', color: '#0B5E3A', fontWeight: 600 }}
                         onClick={() => navigate(`/manager/all-kpis/edit/${selectedKpiId}`)}
                       >
                         Manage
@@ -348,103 +324,75 @@ const AssignmentCenter = () => {
 
                     {selectedKpi.progress.length > 0 ? (
                       selectedKpi.progress.map((staff, idx) => (
-                        /* StaffAssigneeRow — reusable component from /component/StaffAssigneeRow.jsx */
                         <StaffAssigneeRow key={idx} staff={staff} />
                       ))
                     ) : (
-                      <p style={{ fontSize: '13px', color: 'var(--text-muted)', padding: '12px 0' }}>
+                      <p style={{ fontSize: '13px', color: '#6C757D', padding: '12px 0' }}>
                         No staff assigned to this KPI yet.
                       </p>
                     )}
                   </div>
 
-                  <hr style={{ borderColor: '#F0EAE0', margin: '24px 0' }} />
-
                   {/* Assign to more staff */}
-                  <div>
-                    <p className="section-label mb-3">Assign to more staff</p>
+                  <div className="mt-5">
+                    <p style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '16px' }}>Assign to more staff</p>
 
-                    {/* InputGroup — react-bootstrap */}
                     <InputGroup
-                      className="mb-2"
+                      className="mb-4"
                       style={{
                         borderRadius: '8px',
-                        border: '1px solid #E8E1D3',
+                        border: '1px dashed #A8A092',
                         overflow: 'hidden',
+                        backgroundColor: '#FFFFFF',
                       }}
                     >
-                      {/* InputGroup.Text — react-bootstrap */}
-                      <InputGroup.Text style={{ backgroundColor: '#F9F7F4', border: 'none' }}>
-                        <Search size={13} color="var(--text-muted)" />
+                      <InputGroup.Text style={{ backgroundColor: 'transparent', border: 'none', paddingLeft: '16px' }}>
+                        <Search size={14} color="#A8A092" />
                       </InputGroup.Text>
-                      {/* Form.Control — react-bootstrap */}
                       <Form.Control
-                        placeholder="Start typing to search team…"
+                        placeholder="Start typing a name or select from team..."
                         value={staffSearch}
                         onChange={(e) => setStaffSearch(e.target.value)}
-                        style={{ border: 'none', backgroundColor: '#F9F7F4', fontSize: '13px' }}
+                        style={{ border: 'none', backgroundColor: 'transparent', fontSize: '13px', padding: '14px 16px 14px 8px' }}
                       />
                     </InputGroup>
 
-                    {/* Staff dropdown suggestions */}
-                    {suggestedStaff.length > 0 && (
-                      <div
-                        style={{
-                          borderRadius: '10px',
-                          border: '1px solid #E8E1D3',
-                          overflow: 'hidden',
-                          marginBottom: '16px',
-                          backgroundColor: '#fff',
-                        }}
-                      >
-                        {suggestedStaff.map((s, idx) => (
-                          <div
-                            key={idx}
-                            className="d-flex align-items-center gap-3 px-3 py-2"
-                            style={{
-                              borderBottom:
-                                idx < suggestedStaff.length - 1
-                                  ? '1px solid #F0EAE0'
-                                  : 'none',
-                              cursor: 'pointer',
-                              fontSize: '13px',
-                            }}
-                            onClick={() => setStaffSearch('')}
-                          >
+                    {suggestedStaff.length > 0 && staffSearch && (
+                      <div className="mb-4">
+                        <p style={{ fontSize: '10px', fontWeight: 700, color: '#A8A092', letterSpacing: '1px', marginBottom: '12px' }}>SUGGESTED</p>
+                        <div style={{ borderRadius: '8px', border: '1px solid #E8E1D3', overflow: 'hidden', backgroundColor: '#fff' }}>
+                          {suggestedStaff.map((s, idx) => (
                             <div
-                              style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '50%',
-                                backgroundColor: '#F9E7DE',
-                                color: '#C85A3A',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 700,
-                                fontSize: '10px',
-                                flexShrink: 0,
-                              }}
+                              key={idx}
+                              className="d-flex align-items-center gap-3 px-3 py-2"
+                              style={{ borderBottom: idx < suggestedStaff.length - 1 ? '1px solid #F0EAE0' : 'none', cursor: 'pointer' }}
+                              onClick={() => setStaffSearch('')}
                             >
-                              {s.initials}
+                              <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#F9E7DE', color: '#C85A3A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '10px' }}>
+                                {s.initials}
+                              </div>
+                              <span style={{ fontSize: '13px', fontWeight: 500 }}>{s.name}</span>
                             </div>
-                            {s.name}
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     )}
 
-                    {/* Notify button — Button (react-bootstrap) */}
-                    <Button className="btn-orange">Notify assignees</Button>
+                    <div className="d-flex align-items-center justify-content-between mt-4">
+                      <div className="d-flex align-items-center gap-2">
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#0B5E3A' }} />
+                        <span style={{ fontSize: '12px', color: '#6C757D' }}>Changes saved · 2 min ago</span>
+                      </div>
+                      <Button style={{ backgroundColor: '#0B2019', border: 'none', fontSize: '13px', fontWeight: 600, padding: '10px 20px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        Notify assignees <ArrowRight size={14} />
+                      </Button>
+                    </div>
                   </div>
                 </Card.Body>
               </Card>
             ) : (
-              /* Card — react-bootstrap */
               <Card className="custom-card flex-grow-1 d-flex align-items-center justify-content-center">
-                <p className="text-muted" style={{ fontSize: '13px' }}>
-                  Select a KPI from the left to view details.
-                </p>
+                <p className="text-muted" style={{ fontSize: '13px' }}>Select a KPI to view details.</p>
               </Card>
             )}
           </Col>

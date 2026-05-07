@@ -17,7 +17,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
   ];
 
   const staffLinks = [
-    { label: "Dashboard", path: "/", icon: true },
+    { label: "Dashboard", path: "/staff", icon: true },
     { label: "My KPIs", path: "/staff/kpis", icon: true, badge: "12" },
     { label: "Submit progress", path: "/staff/submit", icon: true },
     { label: "Evidence archive", path: "/staff/archive", icon: true },

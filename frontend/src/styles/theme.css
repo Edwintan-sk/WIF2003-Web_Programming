@@ -14,6 +14,14 @@
   
   --font-heading: 'Playfair Display', serif; 
   --font-body: 'Inter', sans-serif;          
+
+  --spacing-main: 40px 60px;
+  --bg-success-light: #e2efe9;
+  --text-success-dark: #183628;
+  --bg-warning-light: #fef2e4;
+  --text-warning-dark: #a87022;
+  --bg-danger-light: #fce8e6;
+  --text-danger-dark: #c73a24;
 }
 
 body {
@@ -1121,14 +1129,34 @@ h1, h2, h3 {
 .staff-custom-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  height: 12px;
-  width: 12px;
+  height: 24px;
+  width: 24px;
   border-radius: 50%;
-  background: var(--sidebar-bg);
+  background: #ffffff;
   cursor: pointer;
-  border: none;
-  box-shadow: none;
-  margin-top: 0px;
+  border: 3px solid var(--sidebar-bg);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  margin-top: -6px; /* Centering against 12px track */
+  transition: transform 0.1s ease;
+}
+
+.staff-custom-range::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+}
+
+.staff-custom-range::-moz-range-thumb {
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+  border: 3px solid var(--sidebar-bg);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  transition: transform 0.1s ease;
+}
+
+.staff-custom-range::-moz-range-thumb:hover {
+  transform: scale(1.1);
 }
 .staff-progress-track-md {
   height: 8px;
@@ -1170,4 +1198,44 @@ h1, h2, h3 {
   width: 24px;
   height: 24px;
   font-size: 12px;
+}
+
+/* Semantic Color Utilities */
+.bg-success-light { 
+  background-color: var(--bg-success-light); 
+}
+.text-success-dark { 
+  color: var(--text-success-dark); 
+}
+.bg-warning-light { 
+  background-color: var(--bg-warning-light); 
+}
+.text-warning-dark { 
+  color: var(--text-warning-dark); 
+}
+.bg-danger-light { 
+  background-color: var(--bg-danger-light); 
+}
+.text-danger-dark { 
+  color: var(--text-danger-dark); 
+}
+.bg-main { 
+  background-color: var(--main-bg) !important; 
+}
+
+/* Structural Utilities */
+.main-layout-pad { 
+  padding: var(--spacing-main) !important; 
+}
+.min-vh-100 { 
+  min-height: 100vh !important; 
+}
+.text-micro { 
+  font-size: 10px !important; 
+}
+.kpi-card-max-width { 
+  max-width: 500px !important; 
+}
+.border-light-gray { 
+  border-color: #e1dbcd !important; 
 }

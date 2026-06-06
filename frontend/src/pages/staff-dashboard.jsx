@@ -1,51 +1,51 @@
-import React from 'react';
-import { Row, Col, Card, InputGroup, Form } from 'react-bootstrap';
-import { Search, GridFill, ArrowRight } from 'react-bootstrap-icons';
-import Sidebar from '../component/Sidebar';  // ← ADD THIS IMPORT
+import React, { useState, useEffect, useContext } from 'react';
+import { Row, Col, Card, InputGroup, Form, Spinner, Alert } from 'react-bootstrap';
+import { Search, ArrowRight } from 'react-bootstrap-icons';
+import { useNavigate } from 'react-router-dom';
+import Sidebar from '../component/Sidebar';
+import api from '../utils/axiosInstance';
+import { AuthContext } from '../context/AuthContext';
 import '../styles/theme.css';
 
-// TODO: Replace Mock Data with database data later
-const statsData = [
-  { id: 1, label: 'OVERALL PROGRESS', value: '68%', hasProgress: true, progressValue: 68, badgeText: '+12%', 
-    badgeColor: '#1b6a38', badgeBg: '#e6f4ea', dotColor: '#1b6a38'},
-  { id: 2, label: 'KPIS ASSIGNED', value: '12', badgeText: '2 new', 
-    badgeColor: '#c73a24', badgeBg: '#fce8e6', dotColor: '#c73a24'},
-  { id: 3, label: 'COMPLETED', value: '8', badgeText: '+3', badgeColor: '#1b6a38', badgeBg: '#e6f4ea', 
-    dotColor: '#1b6a38'},
-  { id: 4, label: 'PENDING REVIEW', value: '2', badgeText: '1 overdue', badgeColor: '#a87022', badgeBg: '#fef2e4', 
-    dotColor: '#d69f4c'}
-];
+const StaffDashboard = () => {
+  const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const [stats, setStats] = useState([]);
+  const [activeKpis, setActiveKpis] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-const kpiData = [
-  { id: 1, category: 'Community', catBg: '#e6f4ea', catText: '#1b6a38', title: 'Host 4 community outreach events', 
-    dueDate: 'Nov 30', progress: 75, progColor: '#1b6a38' },
-  { id: 2, category: 'Content', catBg: '#fce8e6', catText: '#c73a24', title: 'Publish 12 editorial articles', 
-    dueDate: 'Dec 15', progress: 58, progColor: '#c73a24' },
-  { id: 3, category: 'Internal', catBg: '#fef2e4', catText: '#a87022', title: 'Complete communications audit', 
-    dueDate: 'Nov 22', progress: 40, progColor: '#d69f4c', color:'#B8862D' },
-  { id: 4, category: 'Partnerships', catBg: '#e6f4ea', catText: '#1b6a38', title: 'Secure 3 new media partnerships', 
-    dueDate: 'Jan 10', progress: 92, progColor: '#1b6a38' },
-];
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const response = await api.get('/api/kpi/dashboard');
+        const data = response.data;
+        
+        setStats(data.stats || []);
+        setActiveKpis(data.activeKpis || []);
+        setRecentActivity(data.recentActivity || []);
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        setError(err.message || 'An error occurred while loading dashboard data.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-const activityData = [
-  { id: 1, dotColor: '#1b6a38', title: 'Evidence approved', desc: 'Outreach event #3 by Rachel K.', time: '2 hours ago' },
-  { id: 2, dotColor: '#c73a24', title: 'New comment', desc: "On 'Editorial articles' KPI", time: 'Yesterday' },
-  { id: 3, dotColor: '#d69f4c', title: 'Deadline reminder', desc: 'Audit due in 5 days', time: '2 days ago' },
-  { id: 4, dotColor: '#1b6a38', title: 'New KPI assigned', desc: 'Partnership outreach (Q1)', time: '3 days ago' },
-  { id: 5, dotColor: '#c73a24', title: 'Revision requested', desc: "On 'Community outreach'", time: '4 days ago' },
-];
+    fetchDashboardData();
+  }, []);
 
-const StaffDashboard = () => { 
   return (
     <div className="d-flex">
       <Sidebar role="staff" />
       
-      <main style={{  // ← ADD STYLES TO MAIN
+      <main className="main-layout-pad bg-main min-vh-100" style={{
         marginLeft: 'var(--sidebar-width)', 
-        flex: 1, 
-        padding: '40px 60px',
-        backgroundColor: 'var(--main-bg)',
-        minHeight: '100vh'
+        flex: 1
       }}>
         <header className="d-flex justify-content-between align-items-start mb-5">
           <div>
@@ -68,104 +68,132 @@ const StaffDashboard = () => {
         {/* Welcome Section */}
         <div className="d-flex justify-content-between align-items-end mb-4 pb-2">
           <div>
-            <h2 className="serif-font mb-2 staff-heading-greeting">Good afternoon, Aisha.</h2>
-            <p className="text-secondary mb-0 staff-text-sm">You have 3 KPIs with submissions due this week. Let's keep it moving.</p>
+            <h2 className="serif-font mb-2 staff-heading-greeting">Good afternoon, {user?.name || 'Staff'}.</h2>
+            <p className="text-secondary mb-0 staff-text-sm">Here is a snapshot of your current KPI targets and submissions.</p>
           </div>
-          <button className="btn staff-btn-primary-dark rounded-3 px-4 py-2 d-flex align-items-center gap-2 shadow-sm staff-text-sm">
+          <button 
+            onClick={() => navigate('/staff/submit')}
+            className="btn staff-btn-primary-dark rounded-3 px-4 py-2 d-flex align-items-center gap-2 shadow-sm staff-text-sm"
+          >
             Submit progress <ArrowRight size={16} />
           </button>
         </div>
 
-        {/* Top Stats Grid */}
-        <Row className="g-4 mb-4 pb-2">
-          {statsData.map((stat) => (
-            <Col xs={12} md={6} lg={3} key={stat.id}>
-              <Card className="staff-custom-card h-100 p-4 d-flex flex-column justify-content-between" style={{ minHeight: '160px' }}>
-                <div className="d-flex align-items-center gap-2 mb-2">
-                  <div className="rounded-circle staff-stat-dot" style={{backgroundColor: stat.dotColor }}></div>
-                  <h6 className="mb-0 text-secondary fw-bold text-uppercase staff-text-xs">{stat.label}</h6>
-                </div>
-                <div className="mt-2">
-                  <span className="serif-font" style={{ fontSize: '3rem', lineHeight: 1, color: 'var(--text-main)' }}>{stat.value}</span>
-                </div>
-                <div className="mt-auto pt-3">
-                  {stat.hasProgress ? (
-                    <div className="d-flex align-items-center gap-3">
-                      <span className="fw-bold rounded px-2 py-1 staff-text-xs" style={{backgroundColor: stat.badgeBg, color: stat.badgeColor }}>{stat.badgeText}</span>
-                      <div className="progress progress-track-sm flex-grow-1">
-                        <div className="progress-bar rounded-pill" style={{ width: `${stat.progressValue}%`, backgroundColor: 'var(--sidebar-bg)' }}></div>
-                      </div>
-                    </div>
-                  ) : (
-                    <span className="fw-bold rounded px-2 py-1 d-inline-block staff-text-xs" style={{backgroundColor: stat.badgeBg, color: stat.badgeColor }}>{stat.badgeText}</span>
-                  )}
-                </div>
-              </Card>
-            </Col>
-          ))}
-        </Row>
+        {error && (
+          <Alert variant="danger" className="mb-4 shadow-sm rounded-3">
+            <Alert.Heading className="fs-6 fw-bold">Failed to load overview</Alert.Heading>
+            <p className="mb-0 staff-text-sm">{error}</p>
+          </Alert>
+        )}
 
-        {/* Bottom Section: KPIs and Activity */}
-        <Row className="g-4 flex-grow-1">
-          {/* Active KPIs */}
-          <Col xs={12} lg={8}>
-            <Card className="staff-custom-card h-100 p-4 p-xl-5">
-              <div className="d-flex justify-content-between align-items-center mb-4 pb-2">
-                <div className="d-flex align-items-center gap-3">
-                  <h2 className="fs-4 fw-bold serif-font mb-0">Active KPIs</h2>
-                  <span className="d-flex align-items-center justify-content-center bg-light text-secondary fw-bold rounded-circle staff-badge-circle-24">4</span>
-                </div>
-                <a href="#" className="text-secondary text-decoration-none staff-text-sm fw-medium d-flex align-items-center gap-1">
-                  View all <ArrowRight size={14} />
-                </a>
-              </div>
-              
-              <div className="d-flex flex-column gap-4">
-                {kpiData.map((kpi, index) => (
-                  <div key={kpi.id}>
-                    <div className="d-flex align-items-center justify-content-between mb-2 pb-1">
-                      <div className="d-flex align-items-center gap-3 flex-grow-1">
-                        <span className="fw-bold rounded px-2 py-1 staff-text-mini" style={{backgroundColor: kpi.catBg, color: kpi.catText }}>{kpi.category}</span>
-                        <span className="fw-bold staff-text-sm">{kpi.title}</span>
-                      </div>
-                      <span className="text-secondary fw-medium staff-text-mini">Due {kpi.dueDate}</span>
+        {isLoading ? (
+          <div className="d-flex justify-content-center align-items-center py-5">
+            <Spinner animation="border" variant="dark" className="me-2" />
+            <span className="serif-font fw-medium">Loading overview...</span>
+          </div>
+        ) : (
+          <>
+            {/* Top Stats Grid */}
+            <Row className="g-4 mb-4 pb-2">
+              {stats.map((stat) => (
+                <Col xs={12} md={6} lg={3} key={stat.id}>
+                  <Card className="staff-custom-card h-100 p-4 d-flex flex-column justify-content-between" style={{ minHeight: '160px' }}>
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <div className="rounded-circle staff-stat-dot" style={{ backgroundColor: stat.dotColor }}></div>
+                      <h6 className="mb-0 text-secondary fw-bold text-uppercase staff-text-xs">{stat.label}</h6>
                     </div>
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="progress staff-progress-track-md flex-grow-1">
-                        <div className="progress-bar rounded-pill" style={{ width: `${kpi.progress}%`, backgroundColor: kpi.progColor, transition: 'width 0.5s ease' }}></div>
-                      </div>
-                      <span className="fw-bold text-end staff-text-sm" style={{ width: '36px' }}>{kpi.progress}%</span>
+                    <div className="mt-2">
+                      <span className="serif-font" style={{ fontSize: '3rem', lineHeight: 1, color: 'var(--text-main)' }}>{stat.value}</span>
                     </div>
-                    {index < kpiData.length - 1 && <hr className="text-light opacity-100 mt-4 mb-0" />}
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </Col>
+                    <div className="mt-auto pt-3">
+                      {stat.hasProgress ? (
+                        <div className="d-flex align-items-center gap-3">
+                          <span className="fw-bold rounded px-2 py-1 staff-text-xs" style={{ backgroundColor: stat.badgeBg, color: stat.badgeColor }}>{stat.badgeText}</span>
+                          <div className="progress progress-track-sm flex-grow-1">
+                            <div className="progress-bar rounded-pill" style={{ width: `${stat.progressValue}%`, backgroundColor: 'var(--sidebar-bg)' }}></div>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="fw-bold rounded px-2 py-1 d-inline-block staff-text-xs" style={{ backgroundColor: stat.badgeBg, color: stat.badgeColor }}>{stat.badgeText}</span>
+                      )}
+                    </div>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
 
-          {/* Recent Activity Timeline */}
-          <Col xs={12} lg={4}>
-            <Card className="staff-custom-card h-100 p-4 p-xl-5">
-              <h2 className="fs-4 fw-bold serif-font mb-1">Recent activity</h2>
-              <p className="text-secondary fw-medium mb-4 pb-2 staff-text-mini">Last 7 days</p>
-              
-              <div className="staff-timeline-track">
-                {activityData.map((activity) => (
-                  <div key={activity.id} className="position-relative ps-4 mb-4 pb-1">
-                    {/* Timeline Dot */}
-                    <div className="position-absolute rounded-circle border border-2 border-white staff-timeline-dot" style={{ backgroundColor: activity.dotColor }}>
+            {/* Bottom Section: KPIs and Activity */}
+            <Row className="g-4 flex-grow-1">
+              {/* Active KPIs */}
+              <Col xs={12} lg={8}>
+                <Card className="staff-custom-card h-100 p-4 p-xl-5">
+                  <div className="d-flex justify-content-between align-items-center mb-4 pb-2">
+                    <div className="d-flex align-items-center gap-3">
+                      <h2 className="fs-4 fw-bold serif-font mb-0">Active KPIs</h2>
+                      <span className="d-flex align-items-center justify-content-center bg-light text-secondary fw-bold rounded-circle staff-badge-circle-24">
+                        {activeKpis.length}
+                      </span>
                     </div>
-                    <div>
-                      <h4 className="fw-bold mb-1 staff-text-sm">{activity.title}</h4>
-                      <p className="text-secondary mb-1 lh-sm staff-text-mini">{activity.desc}</p>
-                      <span className="text-secondary fw-medium staff-text-xs">{activity.time}</span>
-                    </div>
+                    <a href="/staff/kpis" className="text-secondary text-decoration-none staff-text-sm fw-medium d-flex align-items-center gap-1">
+                      View all <ArrowRight size={14} />
+                    </a>
                   </div>
-                ))}
-              </div>
-            </Card>
-          </Col>
-        </Row>
+                  
+                  <div className="d-flex flex-column gap-4">
+                    {activeKpis.length > 0 ? (
+                      activeKpis.map((kpi, index) => (
+                        <div key={kpi.id || index}>
+                          <div className="d-flex align-items-center justify-content-between mb-2 pb-1">
+                            <div className="d-flex align-items-center gap-3 flex-grow-1">
+                              <span className="fw-bold rounded px-2 py-1 staff-text-mini" style={{ backgroundColor: kpi.catBg, color: kpi.catText }}>{kpi.category}</span>
+                              <span className="fw-bold staff-text-sm">{kpi.title}</span>
+                            </div>
+                            <span className="text-secondary fw-medium staff-text-mini">Due {kpi.dueDateFormatted || kpi.dueDate}</span>
+                          </div>
+                          <div className="d-flex align-items-center gap-3">
+                            <div className="progress staff-progress-track-md flex-grow-1">
+                              <div className="progress-bar rounded-pill" style={{ width: `${kpi.progress}%`, backgroundColor: kpi.progColor, transition: 'width 0.5s ease' }}></div>
+                            </div>
+                            <span className="fw-bold text-end staff-text-sm" style={{ width: '36px' }}>{kpi.progress}%</span>
+                          </div>
+                          {index < activeKpis.length - 1 && <hr className="text-light opacity-100 mt-4 mb-0" />}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-secondary text-center py-4 staff-text-sm mb-0">No active KPIs assigned to you.</p>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+
+              {/* Recent Activity Timeline */}
+              <Col xs={12} lg={4}>
+                <Card className="staff-custom-card h-100 p-4 p-xl-5">
+                  <h2 className="fs-4 fw-bold serif-font mb-1">Recent activity</h2>
+                  <p className="text-secondary fw-medium mb-4 pb-2 staff-text-mini">Last 7 days</p>
+                  
+                  <div className="staff-timeline-track">
+                    {recentActivity.length > 0 ? (
+                      recentActivity.map((activity) => (
+                        <div key={activity.id} className="position-relative ps-4 mb-4 pb-1">
+                          {/* Timeline Dot */}
+                          <div className="position-absolute rounded-circle border border-2 border-white staff-timeline-dot" style={{ backgroundColor: activity.dotColor }}></div>
+                          <div>
+                            <h4 className="fw-bold mb-1 staff-text-sm">{activity.title}</h4>
+                            <p className="text-secondary mb-1 lh-sm staff-text-mini">{activity.desc}</p>
+                            <span className="text-secondary fw-medium staff-text-xs">{activity.time}</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-secondary text-center py-4 staff-text-sm mb-0">No recent activity found.</p>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+            </Row>
+          </>
+        )}
       </main>
     </div>
   );

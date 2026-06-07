@@ -12,6 +12,7 @@ const TAG_STYLES = {
   Decision: { bg: '#fce8e6', text: '#c73a24', border: '#f5c6bc' },
   KPI:      { bg: '#e6f4ea', text: '#1b6a38', border: '#b7dfbf' },
   Deadline: { bg: '#fef2e4', text: '#a87022', border: '#f5deb3' },
+  Comment:  { bg: '#e6ebf1', text: '#597495', border: '#c5d1df' },
   Activity: { bg: '#e8eaf6', text: '#3949ab', border: '#c5cae9' },
 };
 

@@ -13,6 +13,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
   const navigate = useNavigate();
 
   const [kpiCount, setKpiCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ');
   const displayName = user?.englishName || fullName || 'User';
@@ -40,6 +41,18 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
     }
   }, [isManager]);
 
+  // Poll the unread notification count for the Notifications badge.
+  useEffect(() => {
+    const fetchUnread = () => {
+      api.get('/api/notifications/unread-count')
+        .then(res => setUnreadCount(res.data?.unread || 0))
+        .catch(err => console.error('Error fetching unread count', err));
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Define link arrays based on role
   const managerLinks = [
     { label: "Team dashboard", path: "/manager", icon: true },
@@ -58,7 +71,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
   const workspaceLinks = isManager ? managerLinks : staffLinks;
 
   const communicationLinks = [
-    { label: "Notifications", path: isManager ? "/manager/notifications" : "/staff/notifications", icon: true, badge: isManager ? "5" : "3" },
+    { label: "Notifications", path: isManager ? "/manager/notifications" : "/staff/notifications", icon: true, badge: unreadCount > 0 ? String(unreadCount) : null },
     { label: "Feedback", path: isManager ? "/manager/feedback" : "/staff/feedback", icon: true },
     { label: isManager ? "Reports" : "Help & Support", path: isManager ? "/reports" : "/help", icon: true },
   ];

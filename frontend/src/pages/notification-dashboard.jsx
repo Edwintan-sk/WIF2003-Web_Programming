@@ -1,66 +1,18 @@
-import React, { useState } from 'react';
-/* React-Bootstrap Components: Container, Button, Badge, ButtonGroup */
-import { Container, Button, Badge, ButtonGroup } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+/* React-Bootstrap Components */
+import { Button, Badge, ButtonGroup, Spinner } from 'react-bootstrap';
 /* React-Bootstrap-Icons: Envelope */
 import { Envelope } from 'react-bootstrap-icons';
 import { useLocation } from 'react-router-dom';
 import Sidebar from '../component/Sidebar';
+import api from '../utils/axiosInstance';
 import '../styles/theme.css';
 
 /* Reusable Components */
 import SearchBar from '../component/SearchBar';
 import NotificationCard from '../component/NotificationCard';
 
-// TODO: Replace mock data with database data later
-const notificationsData = [
-  {
-    id: 1,
-    tag: 'Decision',
-    title: 'Submission rejection',
-    description: 'Your evidence submission for community outreach event was rejected, revision is required!',
-    time: '2h ago',
-    isRead: false,
-    category: 'action',
-  },
-  {
-    id: 2,
-    tag: 'KPI',
-    title: 'New assigned KPI',
-    description: "A new KPI 'Host 4 community outreach events' has been assigned to you",
-    time: '3h ago',
-    isRead: false,
-    category: 'activity',
-  },
-  {
-    id: 3,
-    tag: 'Deadline',
-    title: 'Deadline reminder',
-    description: 'Audit due in 5 days',
-    time: '1d ago',
-    isRead: false,
-    category: 'deadline',
-  },
-  {
-    id: 4,
-    tag: 'Decision',
-    title: 'Submission approval',
-    description: 'Your evidence submission for community outreach event was approved!',
-    time: '5d ago',
-    isRead: true,
-    category: 'action',
-  },
-  {
-    id: 5,
-    tag: 'KPI',
-    title: 'New assigned KPI',
-    description: "A new KPI 'Host 4 community outreach events' has been assigned to you!",
-    time: '1w ago',
-    isRead: true,
-    category: 'activity',
-  },
-];
-
-// Filter tab definitions with counts
+// Filter tab definitions
 const filterTabs = [
   { id: 'all', label: 'All' },
   { id: 'unread', label: 'Unread' },
@@ -69,54 +21,96 @@ const filterTabs = [
   { id: 'activity', label: 'Activity' },
 ];
 
+const POLL_INTERVAL_MS = 15000;
+
 const NotificationDashboard = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [notifications, setNotifications] = useState(notificationsData);
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const location = useLocation();
+  const role = location.pathname.startsWith('/manager') ? 'manager' : 'staff';
+
+  // Fetch notifications from the backend. `silent` skips the loading spinner
+  // (used for background polling so the list doesn't flicker).
+  const fetchNotifications = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setIsLoading(true);
+      setError(null);
+      const response = await api.get('/api/notifications');
+      setNotifications(response.data.data || []);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to load notifications.');
+    } finally {
+      if (!silent) setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(() => fetchNotifications(true), POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
   // Compute counts for each filter tab
-  const getCounts = () => ({
+  const counts = {
     all: notifications.length,
     unread: notifications.filter((n) => !n.isRead).length,
     action: notifications.filter((n) => n.category === 'action').length,
     deadline: notifications.filter((n) => n.category === 'deadline').length,
     activity: notifications.filter((n) => n.category === 'activity').length,
-  });
-
-  const counts = getCounts();
+  };
 
   // Filter notifications based on active tab and search query
   const filteredNotifications = notifications.filter((notification) => {
-    // Tab filter
     let passesTab = true;
     if (activeFilter === 'unread') passesTab = !notification.isRead;
     else if (activeFilter !== 'all') passesTab = notification.category === activeFilter;
 
-    // Search filter
+    const q = searchQuery.toLowerCase();
     const passesSearch =
       searchQuery === '' ||
-      notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      notification.tag.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      notification.description.toLowerCase().includes(searchQuery.toLowerCase());
+      notification.title.toLowerCase().includes(q) ||
+      notification.tag.toLowerCase().includes(q) ||
+      (notification.description || '').toLowerCase().includes(q);
 
     return passesTab && passesSearch;
   });
 
-  // Mark a single notification as read
-  const handleMarkRead = (id) => {
+  // Toggle a single notification's read state (optimistic + persisted)
+  const handleMarkRead = async (id) => {
+    const target = notifications.find((n) => n.id === id);
+    if (!target) return;
+    const nextRead = !target.isRead;
+
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: !n.isRead } : n))
+      prev.map((n) => (n.id === id ? { ...n, isRead: nextRead } : n))
     );
+
+    try {
+      await api.patch(`/api/notifications/${id}/read`, { isRead: nextRead });
+    } catch (err) {
+      console.error('Error updating notification:', err);
+      // Roll back on failure
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: !nextRead } : n))
+      );
+    }
   };
 
-  // Mark all notifications as read
-  const handleMarkAllRead = () => {
+  // Mark all as read (optimistic + persisted)
+  const handleMarkAllRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    try {
+      await api.patch('/api/notifications/read-all');
+    } catch (err) {
+      console.error('Error marking all as read:', err);
+      fetchNotifications(true);
+    }
   };
-
-  // Determine role based on current URL path
-  const location = useLocation();
-  const role = location.pathname.startsWith('/manager') ? 'manager' : 'staff';
 
   return (
     <div className="d-flex">
@@ -138,14 +132,12 @@ const NotificationDashboard = () => {
           <h1 className="fw-bold m-0 fs-3 serif-font">Notifications</h1>
         </div>
 
-        {/* React-Bootstrap: Button - "Mark all as read" action */}
         <Button
           variant="outline-secondary"
-         
           className="d-flex align-items-center gap-2 rounded-3 px-3 py-2 btn-mark-all-read"
           onClick={handleMarkAllRead}
+          disabled={counts.unread === 0}
         >
-          {/* React-Bootstrap-Icons: Envelope */}
           <Envelope size={16} />
           <span className="text-sm fw-medium">Mark all as read</span>
         </Button>
@@ -154,10 +146,8 @@ const NotificationDashboard = () => {
       <div className="header-divider"></div>
 
       {/* Filter Tabs */}
-      {/* React-Bootstrap: ButtonGroup - groups the filter tab buttons */}
       <ButtonGroup className="mb-4 flex-wrap gap-2">
         {filterTabs.map((tab) => (
-          /* React-Bootstrap: Button - individual filter tab */
           <Button
             key={tab.id}
             variant="light"
@@ -167,7 +157,6 @@ const NotificationDashboard = () => {
             onClick={() => setActiveFilter(tab.id)}
           >
             <span className="text-sm fw-medium">{tab.label}</span>
-            {/* React-Bootstrap: Badge - count pill inside filter tab */}
             <Badge
               pill
               bg={activeFilter === tab.id ? 'light' : 'secondary'}
@@ -192,9 +181,17 @@ const NotificationDashboard = () => {
 
       {/* Notification Cards List */}
       <div className="notification-list">
-        {filteredNotifications.length > 0 ? (
+        {isLoading ? (
+          <div className="text-center py-5">
+            <Spinner animation="border" size="sm" className="me-2" />
+            <span className="text-secondary">Loading notifications…</span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-5">
+            <p className="text-danger fw-medium mb-0">{error}</p>
+          </div>
+        ) : filteredNotifications.length > 0 ? (
           filteredNotifications.map((notification) => (
-            /* Reusable NotificationCard Component */
             <NotificationCard
               key={notification.id}
               tag={notification.tag}
@@ -206,7 +203,6 @@ const NotificationDashboard = () => {
             />
           ))
         ) : (
-          /* React-Bootstrap: Container (implicit) - empty state */
           <div className="text-center py-5">
             <Envelope size={40} className="text-secondary mb-3" />
             <p className="text-secondary fw-medium">No notifications found.</p>

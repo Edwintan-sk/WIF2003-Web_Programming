@@ -1,6 +1,8 @@
 const Kpi = require('../models/Kpi');
 const Activity = require('../models/Activity');
+const User = require('../models/User');
 const mongoose = require('mongoose');
+const { createNotifications } = require('../utils/notify');
 const {
   KPI_STATUS,
   MILESTONE_STATUS,
@@ -437,6 +439,24 @@ exports.submitProgress = async (req, res) => {
     } catch (actError) {
       // Log the failure to database logs but don't reject the whole client request
       console.error(`Failed to log activity record: ${actError.stack}`);
+    }
+
+    // Notify all managers that a new submission is awaiting review (fault-tolerant)
+    try {
+      const managers = await User.find({ role: 'manager' }).select('email');
+      await createNotifications(
+        managers.map((m) => m.email),
+        {
+          tag: 'KPI',
+          category: 'action',
+          title: 'New submission to review',
+          description: `${assigneeEmail} submitted ${metricNum}% for '${updatedKpi.title}'`,
+          link: '/manager/verification-inbox',
+          kpiId: updatedKpi._id,
+        }
+      );
+    } catch (notifyError) {
+      console.error(`Failed to send submission notification: ${notifyError.message}`);
     }
 
     res.status(200).json({

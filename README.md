@@ -111,11 +111,25 @@ cd frontend
 npm install
 ```
 
-### 4. Run the project
+### 4. Run the frontend
 ```bash
 npm run dev
 ```
 
+### 2. Navigate to backend
+```bash
+cd backend
+```
+
+### 3. Install dependencies
+```bash
+npm install
+```
+
+### 4. Run the backend
+```bash
+npm run dev
+```
 ---
 
 *Developed by Group KP Eye*

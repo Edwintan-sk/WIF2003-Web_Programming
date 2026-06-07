@@ -1,8 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const Kpi = require('../models/Kpi.js');
+const { authenticateJWT } = require('../middleware/auth.js');
+const kpiController = require('../controllers/kpiController.js');
 
-// 1. GET all KPIs from database
+const upload = require('../middleware/upload.js');
+
+// 1. GET dashboard aggregates for logged-in staff member (Protected)
+router.get('/dashboard', authenticateJWT, kpiController.getDashboardData);
+
+// 2. GET list of KPIs specifically assigned to the logged-in staff (Protected)
+router.get('/assigned', authenticateJWT, kpiController.getAssignedKpis);
+
+// 3. POST submit a progress update for review (Protected)
+router.post('/progress', authenticateJWT, (req, res, next) => {
+  upload.single('evidenceFile')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message });
+    }
+    next();
+  });
+}, kpiController.submitProgress);
+
+// --- Existing Legacy Routes (Preserved for compatibility) ---
+
+// 4. GET all KPIs from database
 router.get('/', async (req, res) => {
   try {
     const kpis = await Kpi.find().sort({ createdAt: -1 });
@@ -12,7 +34,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 2. POST create a new KPI
+// 5. POST create a new KPI
 router.post('/', async (req, res) => {
   try {
     const newKpi = new Kpi(req.body);
@@ -23,7 +45,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// 3. PUT update an existing KPI or progress
+// 6. PUT update an existing KPI or progress
 router.put('/:id', async (req, res) => {
   try {
     const updatedKpi = await Kpi.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });

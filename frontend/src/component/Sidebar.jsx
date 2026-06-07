@@ -1,6 +1,8 @@
 import { Nav } from 'react-bootstrap';
 import { BoxArrowRight } from 'react-bootstrap-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import api from '../utils/axiosInstance';
 import '../styles/theme.css';
 import { useAuth } from '../context/AuthContext';
 
@@ -9,6 +11,22 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
   const isManager = role === "manager";
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [kpiCount, setKpiCount] = useState(0);
+
+  useEffect(() => {
+    if (!isManager) {
+      api.get('/api/kpi/assigned')
+        .then(res => {
+          if (res.data && res.data.total !== undefined) {
+            setKpiCount(res.data.total);
+          } else if (res.data && Array.isArray(res.data)) {
+            setKpiCount(res.data.length);
+          }
+        })
+        .catch(err => console.error("Error fetching KPI count for sidebar", err));
+    }
+  }, [isManager]);
 
   // Define link arrays based on role
   const managerLinks = [
@@ -20,7 +38,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
 
   const staffLinks = [
     { label: "Dashboard", path: "/staff", icon: true },
-    { label: "My KPIs", path: "/staff/kpis", icon: true, badge: "12" },
+    { label: "My KPIs", path: "/staff/kpis", icon: true, badge: kpiCount > 0 ? String(kpiCount) : null },
     { label: "Submit progress", path: "/staff/submit", icon: true },
     { label: "Evidence archive", path: "/staff/archive", icon: true },
   ];
@@ -55,8 +73,8 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
         </div>
         {isManager && (
           <span 
-            className="badge border text-uppercase mt-2" 
-            style={{ fontSize: '10px', color: 'var(--sidebar-tag)', width: 'fit-content' }}
+            className="badge border text-uppercase mt-2 text-micro" 
+            style={{ color: 'var(--sidebar-tag)', width: 'fit-content' }}
           >
             Manager
           </span>

@@ -1,19 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const Kpi = require('../models/Kpi.js');
-const { authenticateJWT } = require('../middleware/auth.js');
+const { protectRoute } = require('../middleware/authMiddleware.js');
 const kpiController = require('../controllers/kpiController.js');
 
 const upload = require('../middleware/upload.js');
 
 // 1. GET dashboard aggregates for logged-in staff member (Protected)
-router.get('/dashboard', authenticateJWT, kpiController.getDashboardData);
+router.get('/dashboard', protectRoute, kpiController.getDashboardData);
 
 // 2. GET list of KPIs specifically assigned to the logged-in staff (Protected)
-router.get('/assigned', authenticateJWT, kpiController.getAssignedKpis);
+router.get('/assigned', protectRoute, kpiController.getAssignedKpis);
 
 // 3. POST submit a progress update for review (Protected)
-router.post('/progress', authenticateJWT, (req, res, next) => {
+router.post('/progress', protectRoute, (req, res, next) => {
   upload.single('evidenceFile')(req, res, (err) => {
     if (err) {
       return res.status(400).json({ message: err.message });

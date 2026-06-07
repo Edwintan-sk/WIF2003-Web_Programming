@@ -5,8 +5,6 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db.js');
 
-const path = require('path');
-
 const app = express();
 
 // Connect to Cloud Database
@@ -19,7 +17,6 @@ app.use(cors({
 }));
 app.use(express.json()); // Essential for handling incoming JSON data payloads
 app.use(cookieParser());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve uploads folder statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

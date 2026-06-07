@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, InputGroup, Form, Spinner, Alert } from 'react-bootstrap';
 import { Search, ArrowRight } from 'react-bootstrap-icons';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../component/Sidebar';
 import api from '../utils/axiosInstance';
-import { AuthContext } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import '../styles/theme.css';
 
 const StaffDashboard = () => {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user } = useAuth();
   const [stats, setStats] = useState([]);
   const [activeKpis, setActiveKpis] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
@@ -68,7 +68,7 @@ const StaffDashboard = () => {
         {/* Welcome Section */}
         <div className="d-flex justify-content-between align-items-end mb-4 pb-2">
           <div>
-            <h2 className="serif-font mb-2 staff-heading-greeting">Good afternoon, {user?.name || 'Staff'}.</h2>
+            <h2 className="serif-font mb-2 staff-heading-greeting">Good afternoon, {user?.englishName || user?.firstName || 'Staff'}.</h2>
             <p className="text-secondary mb-0 staff-text-sm">Here is a snapshot of your current KPI targets and submissions.</p>
           </div>
           <button 

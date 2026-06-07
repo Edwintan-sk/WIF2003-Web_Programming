@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
 const getTokenFromRequest = (req) => {
   if (req.cookies?.token) {
@@ -17,7 +18,7 @@ const getTokenFromRequest = (req) => {
   return null;
 };
 
-const protectRoute = (req, res, next) => {
+const protectRoute = async (req, res, next) => {
   const token = getTokenFromRequest(req);
 
   if (!token) {
@@ -35,10 +36,18 @@ const protectRoute = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({
+        message: 'Authentication account is unavailable.',
+      });
+    }
 
     req.user = {
-      userId: decoded.userId,
-      role: decoded.role,
+      userId: user._id,
+      role: user.role,
+      email: user.email,
     };
 
     return next();

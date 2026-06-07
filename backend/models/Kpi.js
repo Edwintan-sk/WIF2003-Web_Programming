@@ -9,7 +9,8 @@ const SubmissionSchema = new mongoose.Schema({
   progressValue: { type: Number, required: true, min: 0, max: 100 },
   notes: { type: String },
   evidenceUrl: { type: String },
-  status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' }
+  status: { type: String, enum: ['Pending', 'Approved', 'Rejected', 'Revision Requested'], default: 'Pending' },
+  managerComment: { type: String, default: '' }
 }, { timestamps: true });
 
 const KpiSchema = new mongoose.Schema({

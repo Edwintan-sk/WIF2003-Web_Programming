@@ -7,12 +7,24 @@ import '../styles/theme.css';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const isManager = role === "manager";
   const location = useLocation();
   const navigate = useNavigate();
 
   const [kpiCount, setKpiCount] = useState(0);
+
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ');
+  const displayName = user?.englishName || fullName || 'User';
+  const initials =
+    `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase() || 'U';
+  const jobTitle =
+    user?.positionTitle ||
+    user?.roleAtShop ||
+    (user?.role === 'manager' ? 'Manager' : 'Staff');
+  const profilePhotoUrl = user?.photoUrl
+    ? `http://localhost:5000${user.photoUrl}`
+    : null;
 
   useEffect(() => {
     if (!isManager) {
@@ -135,11 +147,24 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
         <div className="mt-auto pt-3">
           <div className="d-flex align-items-center gap-3 p-3 rounded-4 mb-3 profile-container">
             <div className="rounded-circle d-flex align-items-center justify-content-center fw-bold profile-avatar">
-              {isManager ? "LC" : "AR"}
+              {profilePhotoUrl ? (
+                <img
+                  src={profilePhotoUrl}
+                  alt={`${displayName} profile`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    borderRadius: '50%',
+                  }}
+                />
+              ) : (
+                initials
+              )}
             </div>
             <div>
-              <div className="small fw-bold text-white">{isManager ? "Lee Chen" : "Aisha Rahman"}</div>
-              <div style={{ fontSize: '11px', color: 'var(--sidebar-tag)' }}>{isManager ? "Team manager" : "Communications"}</div>
+              <div className="small fw-bold text-white">{displayName}</div>
+              <div style={{ fontSize: '11px', color: 'var(--sidebar-tag)' }}>{jobTitle}</div>
             </div>
           </div>
 

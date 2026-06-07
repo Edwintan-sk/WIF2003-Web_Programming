@@ -1,17 +1,36 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Envelope, Lock, Eye, EyeSlash, CheckCircleFill } from 'react-bootstrap-icons';
+import { useAuth } from '../context/AuthContext';
 
 function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [role, setRole] = useState('manager');
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: '', password: '', remember: false });
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (role === 'manager') navigate('/manager');
-    else navigate('/staff');
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const user = await login({
+        email: form.email,
+        password: form.password,
+        role,
+        remember: form.remember,
+      });
+
+      navigate(user.role === 'manager' ? '/manager' : '/staff');
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -96,8 +115,26 @@ function Login() {
           </Link>
         </div>
 
-        <button type="submit" className="btn-auth-submit">
-          Sign in
+        {error && (
+          <div
+            role="alert"
+            style={{
+              color: '#B31B1B',
+              backgroundColor: '#FCE8E6',
+              border: '1px solid #F5B5AD',
+              borderRadius: '8px',
+              padding: '10px 12px',
+              marginBottom: '12px',
+              fontSize: '12px',
+              fontWeight: 600,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        <button type="submit" className="btn-auth-submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Signing in...' : 'Sign in'}
         </button>
 
         <div className="auth-bottom">

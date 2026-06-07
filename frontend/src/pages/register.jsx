@@ -3,10 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Envelope, Lock, Eye, EyeSlash, Person, Telephone, CheckCircleFill,
 } from 'react-bootstrap-icons';
+import { useAuth } from '../context/AuthContext';
 
 const initialForm = {
   role: 'manager',
   photo: null,
+  photoPreview: '',
   firstName: '',
   lastName: '',
   englishName: '',
@@ -24,20 +26,59 @@ const initialForm = {
 
 function Register() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(initialForm);
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
-  const next = () => setStep((s) => Math.min(s + 1, 4));
-  const back = () => setStep((s) => Math.max(s - 1, 1));
+  const next = () => {
+    setError('');
+    setStep((s) => Math.min(s + 1, 4));
+  };
+  const back = () => {
+    setError('');
+    setStep((s) => Math.max(s - 1, 1));
+  };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.confirmed) return;
-    alert('Registration request submitted!');
-    navigate('/login');
+
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      await register({
+        role: form.role,
+        photo: form.photo,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        englishName: form.englishName,
+        pronouns: form.pronouns,
+        roleAtShop: form.roleAtShop,
+        positionTitle: form.positionTitle,
+        countryCode: form.countryCode,
+        phone: form.phone,
+        employeeId: form.employeeId,
+        email: form.email,
+        password: form.password,
+      });
+
+      navigate('/login');
+    } catch (requestError) {
+      setError(requestError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -71,6 +112,24 @@ function Register() {
         )}
         {step === 4 && <StepReview form={form} update={update} />}
 
+        {error && (
+          <div
+            role="alert"
+            style={{
+              color: '#B31B1B',
+              backgroundColor: '#FCE8E6',
+              border: '1px solid #F5B5AD',
+              borderRadius: '8px',
+              padding: '10px 12px',
+              marginTop: '12px',
+              fontSize: '12px',
+              fontWeight: 600,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
         <div className="step-nav">
           {step > 1 ? (
             <button type="button" className="btn-step-back" onClick={back}>
@@ -84,9 +143,11 @@ function Register() {
           <button
             type="submit"
             className="btn-step-next"
-            disabled={step === 4 && !form.confirmed}
+            disabled={(step === 4 && !form.confirmed) || isSubmitting}
           >
-            {step === 4 ? 'Submit Request' : 'Continue'}
+            {step === 4
+              ? (isSubmitting ? 'Creating account...' : 'Create Account')
+              : 'Continue'}
           </button>
         </div>
       </form>
@@ -133,7 +194,7 @@ function StepDetails({ form, update }) {
 
       <div className="avatar-uploader">
         <div className="avatar-circle">
-          {form.photo ? <img src={form.photo} alt="avatar" /> : initials}
+          {form.photoPreview ? <img src={form.photoPreview} alt="avatar" /> : initials}
         </div>
         <label className="link-orange" style={{ cursor: 'pointer', fontSize: 12 }}>
           Add/Change photo
@@ -143,7 +204,10 @@ function StepDetails({ form, update }) {
             style={{ display: 'none' }}
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) update('photo', URL.createObjectURL(file));
+              if (file) {
+                update('photo', file);
+                update('photoPreview', URL.createObjectURL(file));
+              }
             }}
           />
         </label>
@@ -352,7 +416,7 @@ function StepReview({ form, update }) {
 
       <div className="review-header">
         <div className="avatar-circle">
-          {form.photo ? <img src={form.photo} alt="avatar" /> : initials}
+          {form.photoPreview ? <img src={form.photoPreview} alt="avatar" /> : initials}
         </div>
         <div>
           <div className="name">{fullName}</div>

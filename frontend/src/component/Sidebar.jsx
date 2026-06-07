@@ -2,8 +2,10 @@ import { Nav } from 'react-bootstrap';
 import { BoxArrowRight } from 'react-bootstrap-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/theme.css';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
+  const { logout } = useAuth();
   const isManager = role === "manager";
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,6 +37,11 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
 
   const handleNavigation = (path) => {
     navigate(path);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
   };
 
   return (
@@ -118,7 +125,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
             </div>
           </div>
 
-          <Nav.Link onClick={() => navigate('/login')} className="d-flex align-items-center gap-2 px-3 py-2 sidebar-link rounded-3 fw-normal" style={{ cursor: 'pointer' }}>
+          <Nav.Link onClick={handleLogout} className="d-flex align-items-center gap-2 px-3 py-2 sidebar-link rounded-3 fw-normal" style={{ cursor: 'pointer' }}>
             <BoxArrowRight size={18} /> Logout
           </Nav.Link>
         </div>

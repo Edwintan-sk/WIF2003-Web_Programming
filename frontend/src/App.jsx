@@ -12,6 +12,40 @@ import Login from './pages/login';
 import Register from './pages/register';
 import NotificationDashboard from './pages/notification-dashboard';
 import Feedback from './pages/feedback';
+import { useAuth } from './context/AuthContext';
+
+function ProtectedRoute({ children, allowedRole }) {
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="brand-row">
+            <div className="brand-mark">K</div>
+            <div className="brand-name">KP EYE</div>
+          </div>
+          <p className="auth-subtitle mb-0">Checking your session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRole && user.role !== allowedRole) {
+    return (
+      <Navigate
+        to={user.role === 'manager' ? '/manager' : '/staff'}
+        replace
+      />
+    );
+  }
+
+  return children;
+}
 
 function App() {
   return (
@@ -23,29 +57,29 @@ function App() {
 
         {/* Staff Routes */}
         <Route path="/" element={<Navigate to="/staff" replace />} />
-        <Route path="/staff" element={<StaffDashboard />} />
-        <Route path="/staff/kpis" element={<StaffAssignedKPI />} />
-        <Route path="/staff/submit" element={<StaffSubmitProgress />} />
-        <Route path="/staff/archive" element={<StaffDashboard />} />
+        <Route path="/staff" element={<ProtectedRoute allowedRole="staff"><StaffDashboard /></ProtectedRoute>} />
+        <Route path="/staff/kpis" element={<ProtectedRoute allowedRole="staff"><StaffAssignedKPI /></ProtectedRoute>} />
+        <Route path="/staff/submit" element={<ProtectedRoute allowedRole="staff"><StaffSubmitProgress /></ProtectedRoute>} />
+        <Route path="/staff/archive" element={<ProtectedRoute allowedRole="staff"><StaffDashboard /></ProtectedRoute>} />
         
         {/* Staff Individual Communication Routes */}
-        <Route path="/staff/notifications" element={<NotificationDashboard />} />
-        <Route path="/staff/feedback" element={<Feedback />} />
-        <Route path="/help" element={<StaffDashboard />} />
+        <Route path="/staff/notifications" element={<ProtectedRoute allowedRole="staff"><NotificationDashboard /></ProtectedRoute>} />
+        <Route path="/staff/feedback" element={<ProtectedRoute allowedRole="staff"><Feedback /></ProtectedRoute>} />
+        <Route path="/help" element={<ProtectedRoute allowedRole="staff"><StaffDashboard /></ProtectedRoute>} />
 
         {/* Manager Routes */}
-        <Route path="/manager" element={<ManagerDashboard />} />
-        <Route path="/manager/all-kpis" element={<AllKPIs />} />
-        <Route path="/manager/all-kpis/new" element={<CreateEditKpi />} />
-        <Route path="/manager/all-kpis/edit/:kpiId" element={<CreateEditKpi />} />
-        <Route path="/manager/assign" element={<AssignmentCenter />} />
-        <Route path="/manager/verification-inbox" element={<VerificationInbox />} />
-        <Route path="/manager/evidence-detail/:id" element={<EvidenceDetailView />} />
+        <Route path="/manager" element={<ProtectedRoute allowedRole="manager"><ManagerDashboard /></ProtectedRoute>} />
+        <Route path="/manager/all-kpis" element={<ProtectedRoute allowedRole="manager"><AllKPIs /></ProtectedRoute>} />
+        <Route path="/manager/all-kpis/new" element={<ProtectedRoute allowedRole="manager"><CreateEditKpi /></ProtectedRoute>} />
+        <Route path="/manager/all-kpis/edit/:kpiId" element={<ProtectedRoute allowedRole="manager"><CreateEditKpi /></ProtectedRoute>} />
+        <Route path="/manager/assign" element={<ProtectedRoute allowedRole="manager"><AssignmentCenter /></ProtectedRoute>} />
+        <Route path="/manager/verification-inbox" element={<ProtectedRoute allowedRole="manager"><VerificationInbox /></ProtectedRoute>} />
+        <Route path="/manager/evidence-detail/:id" element={<ProtectedRoute allowedRole="manager"><EvidenceDetailView /></ProtectedRoute>} />
 
         {/* Manager Individual Communication Routes */}
-        <Route path="/manager/notifications" element={<NotificationDashboard />} />
-        <Route path="/manager/feedback" element={<Feedback />} />
-        <Route path="/reports" element={<ManagerDashboard />} />
+        <Route path="/manager/notifications" element={<ProtectedRoute allowedRole="manager"><NotificationDashboard /></ProtectedRoute>} />
+        <Route path="/manager/feedback" element={<ProtectedRoute allowedRole="manager"><Feedback /></ProtectedRoute>} />
+        <Route path="/reports" element={<ProtectedRoute allowedRole="manager"><ManagerDashboard /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

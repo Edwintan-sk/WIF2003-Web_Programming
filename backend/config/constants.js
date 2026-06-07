@@ -18,7 +18,8 @@ const MILESTONE_STATUS = {
 const SUBMISSION_STATUS = {
   PENDING: 'Pending',
   APPROVED: 'Approved',
-  REJECTED: 'Rejected'
+  REJECTED: 'Rejected',
+  REVISION_REQUESTED: 'Revision Requested'
 };
 
 const CATEGORY_COLORS = {

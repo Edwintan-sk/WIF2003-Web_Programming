@@ -3,6 +3,7 @@ const router = express.Router();
 const Kpi = require('../models/Kpi.js');
 const { protectRoute } = require('../middleware/authMiddleware.js');
 const kpiController = require('../controllers/kpiController.js');
+const { restrictTo } = require('../middleware/roleMiddleware.js');
 
 const upload = require('../middleware/upload.js');
 
@@ -55,5 +56,23 @@ router.put('/:id', async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
+
+// Manager Dashboard
+router.get(
+  '/manager/dashboard',
+  protectRoute,
+  restrictTo('manager'),
+  kpiController.getManagerDashboardData
+);
+
+module.exports = router;
+
+// Approve Submission
+router.patch(
+  '/approve', 
+  protectRoute, 
+  restrictTo('manager'), 
+  kpiController.approveSubmission
+);
 
 module.exports = router;

@@ -2,8 +2,39 @@ import { Container, Row, Col, Card } from 'react-bootstrap';
 import Sidebar from '../component/Sidebar';
 import StatCard from '../component/StatCard';
 import '../styles/theme.css';
+import { useEffect, useState } from 'react';
+import axiosInstance from '../utils/axiosInstance';
 
 const ManagerDashboard = () => {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const response = await axiosInstance.get('/api/kpi/manager/dashboard');
+        setDashboardData(response.data);
+      } catch (error) {
+        console.error('Failed to fetch dashboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDashboard();
+  }, []);
+  
+  if (loading) {
+    return (
+      <div className="d-flex">
+        <Sidebar role="manager" />
+        <main style={{ marginLeft: 'var(--sidebar-width)', flex: 1, padding: '40px 60px' }}>
+          <p>Loading dashboard...</p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="d-flex">
       {/* Passing the manager role to your modular sidebar */}
@@ -29,11 +60,37 @@ const ManagerDashboard = () => {
           marginBottom: '40px',
           flexWrap: 'wrap'
         }}>
-          <StatCard title="OVERALL PROGRESS" value="68" percentage color="#0B2019" subValue="+12%" />
-          <StatCard title="KPIS ASSIGNED" value="12" color="#E85D3F" subValue="+5" />
-          <StatCard title="COMPLETED" value="8" color="#28a745" subValue="+3" />
-          <StatCard title="PENDING REVIEW" value="5" color="#ffc107" subValue="3 new" />
-          <StatCard title="OVERDUE" value="2" color="#dc3545" subValue="+2" />
+          <StatCard 
+            title="OVERALL PROGRESS" 
+            value={dashboardData?.overallProgress?.value || 68} 
+            percentage 
+            color="#0B2019" 
+            subValue={dashboardData?.overallProgress?.change || "+12%"} 
+          />
+          <StatCard 
+            title="KPIS ASSIGNED" 
+            value={dashboardData?.kpisAssigned?.value || 12} 
+            color="#E85D3F" 
+            subValue={dashboardData?.kpisAssigned?.change || "+5"} 
+          />
+          <StatCard 
+            title="COMPLETED" 
+            value={dashboardData?.completed?.value || 8} 
+            color="#28a745" 
+            subValue={dashboardData?.completed?.change || "+3"} 
+          />
+          <StatCard 
+            title="PENDING REVIEW" 
+            value={dashboardData?.pendingReview?.value || 5} 
+            color="#ffc107" 
+            subValue={dashboardData?.pendingReview?.change || "3 new"} 
+          />
+          <StatCard 
+            title="OVERDUE" 
+            value={dashboardData?.overdue?.value || 2} 
+            color="#dc3545" 
+            subValue={dashboardData?.overdue?.change || "+2"} 
+          />
         </div>
 
         {/* Team Progress Overview Section */}

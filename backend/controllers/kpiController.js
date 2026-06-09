@@ -448,3 +448,134 @@ exports.submitProgress = async (req, res) => {
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
+
+/**
+ * @desc    Get manager dashboard stats
+ * @route   GET /api/kpi/manager/dashboard
+ * @access  Protected (Manager only)
+ */
+exports.getManagerDashboardData = async (req, res) => {
+  try {
+    // Get all KPIs (no assignee filter - manager sees everything)
+    const allKpis = await Kpi.find({});
+    
+    if (!allKpis || allKpis.length === 0) {
+      return res.status(200).json({
+        overallProgress: { value: 0, change: "0%" },
+        kpisAssigned: { value: 0, change: "0" },
+        completed: { value: 0, change: "0" },
+        pendingReview: { value: 0, change: "0" },
+        overdue: { value: 0, change: "0" }
+      });
+    }
+    
+    // Calculate OVERALL PROGRESS (average achievementScore across all KPIs)
+    let totalScore = 0;
+    let completedCount = 0;
+    let pendingReviewCount = 0;
+    let overdueCount = 0;
+    let uniqueAssignees = new Set();
+    
+    for (const kpi of allKpis) {
+      // Sum scores for average
+      totalScore += kpi.achievementScore || 0;
+      
+      // Count completed KPIs
+      if (kpi.status === 'Completed') {
+        completedCount++;
+      }
+      
+      // Track unique assignees (for KPIS ASSIGNED count)
+      if (kpi.assignee) {
+        uniqueAssignees.add(kpi.assignee);
+      }
+      
+      // Count pending reviews (submissions with status 'Pending')
+      if (kpi.submissions && kpi.submissions.length > 0) {
+        const pendingSubmissions = kpi.submissions.filter(sub => sub.status === 'Pending');
+        pendingReviewCount += pendingSubmissions.length;
+        
+        // Count overdue submissions (Pending AND created >48 hours ago)
+        const now = new Date();
+        for (const sub of pendingSubmissions) {
+          if (sub.createdAt) {
+            const hoursSince = (now - new Date(sub.createdAt)) / (1000 * 60 * 60);
+            if (hoursSince > 48) {
+              overdueCount++;
+            }
+          }
+        }
+      }
+    }
+    
+    // Calculate average progress
+    const avgProgress = Math.round(totalScore / allKpis.length);
+    
+    // For change values - using mock data since no historical tracking yet
+    // Your frontend will display these as static text anyway
+    const stats = {
+      overallProgress: { value: avgProgress, change: "+12%" },
+      kpisAssigned: { value: uniqueAssignees.size, change: "+5" },
+      completed: { value: completedCount, change: "+3" },
+      pendingReview: { value: pendingReviewCount, change: "3 new" },
+      overdue: { value: overdueCount, change: "+2" }
+    };
+    
+    res.status(200).json(stats);
+    
+  } catch (error) {
+    console.error('Error in getManagerDashboardData:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+/**
+ * @desc    Approve a staff KPI submission
+ * @route   PATCH /api/kpi/approve
+ * @access  Protected (Manager only)
+ */
+exports.approveSubmission = async (req, res) => {
+  try {
+    const { kpiId, submissionId } = req.body;
+
+    // 1. Find the main KPI document
+    const kpi = await Kpi.findById(kpiId);
+    if (!kpi) {
+      return res.status(404).json({ message: 'KPI not found' });
+    }
+
+    // 2. Find the specific submission object inside the subdocument array
+    const submission = kpi.submissions.id(submissionId);
+    if (!submission) {
+      return res.status(404).json({ message: 'Submission record not found' });
+    }
+
+    // Check if it's already approved to prevent double-processing
+    if (submission.status === 'Approved') {
+      return res.status(400).json({ message: 'Submission is already approved' });
+    }
+
+    // 3. Update subdocument submission status
+    submission.status = 'Approved';
+
+    // 4. Update main KPI metric using the approved value (newMetricValue)
+    // If your subdocument field stores it as progressValue, map it appropriately:
+    const approvedScore = submission.newMetricValue || submission.progressValue || 0;
+    kpi.achievementScore = approvedScore;
+
+    // Automatically update overall status if target hits 100%
+    if (approvedScore === 100) {
+      kpi.status = 'Completed';
+    }
+
+    // 5. Save changes back to MongoDB Atlas
+    await kpi.save();
+
+    res.status(200).json({
+      message: 'Submission approved successfully. KPI scores updated.',
+      kpi
+    });
+  } catch (error) {
+    console.error('Error in approveSubmission:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};

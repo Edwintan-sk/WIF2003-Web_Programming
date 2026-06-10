@@ -252,4 +252,26 @@ router.get('/me', protectRoute, async (req, res) => {
   }
 });
 
+router.get('/staff', protectRoute, async (req, res) => {
+  try {
+    const staffMembers = await User.find({ role: 'staff', isActive: true });
+    return res.status(200).json(
+      staffMembers.map(user => ({
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        roleAtShop: user.roleAtShop,
+        positionTitle: user.positionTitle,
+        photoUrl: user.photoUrl,
+      }))
+    );
+  } catch (error) {
+    console.error(`Get staff members error: ${error.message}`);
+    return res.status(500).json({
+      message: 'Unable to retrieve staff members.',
+    });
+  }
+});
+
 module.exports = router;

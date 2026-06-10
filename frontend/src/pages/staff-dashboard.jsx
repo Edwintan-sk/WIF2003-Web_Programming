@@ -147,6 +147,11 @@ const StaffDashboard = () => {
                             <div className="d-flex align-items-center gap-3 flex-grow-1">
                               <span className="fw-bold rounded px-2 py-1 staff-text-mini" style={{ backgroundColor: kpi.catBg, color: kpi.catText }}>{kpi.category}</span>
                               <span className="fw-bold staff-text-sm">{kpi.title}</span>
+                              {kpi.isRevisionRequested && (
+                                <span className="badge font-monospace" style={{ backgroundColor: '#fff3cd', color: '#856404', border: '1px solid #ffeeba', fontSize: '9px', textTransform: 'uppercase' }}>
+                                  Revision Requested
+                                </span>
+                              )}
                             </div>
                             <span className="text-secondary fw-medium staff-text-mini">Due {kpi.dueDateFormatted || kpi.dueDate}</span>
                           </div>
@@ -156,6 +161,11 @@ const StaffDashboard = () => {
                             </div>
                             <span className="fw-bold text-end staff-text-sm" style={{ width: '36px' }}>{kpi.progress}%</span>
                           </div>
+                          {kpi.isRevisionRequested && kpi.feedback && (
+                            <div className="mt-2 p-2 rounded staff-text-xs" style={{ backgroundColor: '#fff8e1', borderLeft: '3px solid #ffb300', color: '#5d4037' }}>
+                              <strong>Revision Requested Note:</strong> {kpi.feedback}
+                            </div>
+                          )}
                           {index < activeKpis.length - 1 && <hr className="text-light opacity-100 mt-4 mb-0" />}
                         </div>
                       ))

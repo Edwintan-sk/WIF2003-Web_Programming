@@ -13,6 +13,8 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
   const navigate = useNavigate();
 
   const [kpiCount, setKpiCount] = useState(0);
+  const [managerKpiCount, setManagerKpiCount] = useState(0);
+  const [pendingSubmissionsCount, setPendingSubmissionsCount] = useState(0);
 
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ');
   const displayName = user?.englishName || fullName || 'User';
@@ -30,22 +32,31 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
     if (!isManager) {
       api.get('/api/kpi/assigned')
         .then(res => {
-          if (res.data && res.data.total !== undefined) {
-            setKpiCount(res.data.total);
-          } else if (res.data && Array.isArray(res.data)) {
-            setKpiCount(res.data.length);
+          const kpisList = res.data.data || res.data || [];
+          if (Array.isArray(kpisList)) {
+            const activeCount = kpisList.filter(k => (k.status || '').toLowerCase() !== 'completed').length;
+            setKpiCount(activeCount);
           }
         })
         .catch(err => console.error("Error fetching KPI count for sidebar", err));
+    } else {
+      api.get('/api/kpi/manager/dashboard')
+        .then(res => {
+          if (res.data) {
+            setManagerKpiCount(res.data.kpisAssigned?.value || 0);
+            setPendingSubmissionsCount(res.data.pendingReview?.value || 0);
+          }
+        })
+        .catch(err => console.error("Error fetching manager stats for sidebar", err));
     }
   }, [isManager]);
 
   // Define link arrays based on role
   const managerLinks = [
     { label: "Team dashboard", path: "/manager", icon: true },
-    { label: "All KPIs", path: "/manager/all-kpis", icon: true, badge: "24" },
+    { label: "All KPIs", path: "/manager/all-kpis", icon: true, badge: managerKpiCount > 0 ? String(managerKpiCount) : null },
     { label: "Assignment center", path: "/manager/assign", icon: true },
-    { label: "Verification inbox", path: "/manager/verification-inbox", icon: true, badge: "8" },
+    { label: "Verification inbox", path: "/manager/verification-inbox", icon: true, badge: pendingSubmissionsCount > 0 ? String(pendingSubmissionsCount) : null },
   ];
 
   const staffLinks = [

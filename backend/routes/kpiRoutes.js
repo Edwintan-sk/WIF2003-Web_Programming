@@ -15,7 +15,7 @@ router.get('/assigned', protectRoute, kpiController.getAssignedKpis);
 
 // 3. POST submit a progress update for review (Protected)
 router.post('/progress', protectRoute, (req, res, next) => {
-  upload.single('evidenceFile')(req, res, (err) => {
+  upload.any()(req, res, (err) => {
     if (err) {
       return res.status(400).json({ message: err.message });
     }
@@ -65,9 +65,44 @@ router.get(
   kpiController.getManagerDashboardData
 );
 
-module.exports = router;
+// Submissions Routes for Manager
+router.get(
+  '/manager/submissions',
+  protectRoute,
+  restrictTo('manager'),
+  kpiController.getSubmissions
+);
 
-// Approve Submission
+router.get(
+  '/manager/submissions/:id',
+  protectRoute,
+  restrictTo('manager'),
+  kpiController.getSubmissionById
+);
+
+router.patch(
+  '/manager/submissions/:id/decision',
+  protectRoute,
+  restrictTo('manager'),
+  kpiController.handleSubmissionDecision
+);
+
+// GET single KPI
+router.get(
+  '/:id',
+  protectRoute,
+  kpiController.getKpiById
+);
+
+// DELETE KPI
+router.delete(
+  '/:id',
+  protectRoute,
+  restrictTo('manager'),
+  kpiController.deleteKpi
+);
+
+// Approve Submission (legacy)
 router.patch(
   '/approve', 
   protectRoute, 

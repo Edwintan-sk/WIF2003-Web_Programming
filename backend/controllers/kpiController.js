@@ -394,9 +394,9 @@ exports.submitProgress = async (req, res) => {
     const assigneeEmail = req.user.email;
     let evidenceUrls = [];
     if (req.files && req.files.length > 0) {
-      evidenceUrls = req.files.map(file => `/uploads/${file.filename}`);
+      evidenceUrls = req.files.map(file => file.path && file.path.startsWith('http') ? file.path : `/uploads/${file.filename}`);
     } else if (req.file) {
-      evidenceUrls = [`/uploads/${req.file.filename}`];
+      evidenceUrls = [req.file.path && req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`];
     }
     let evidenceUrl = evidenceUrls.length > 0 ? evidenceUrls[0] : (req.body.evidenceUrl || '');
 

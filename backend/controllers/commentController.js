@@ -110,7 +110,9 @@ exports.createComment = async (req, res) => {
     // Audit log (fault-tolerant).
     try {
       await Activity.create({
-        assignee: kpi.assignee,
+        assignee: (Array.isArray(kpi.assignees) && kpi.assignees.length > 0)
+          ? kpi.assignees[0]
+          : (kpi.assignee || 'unknown'),
         title: 'New comment',
         desc: `${authorName} commented on '${kpi.title}'`,
         type: 'comment',
@@ -124,9 +126,12 @@ exports.createComment = async (req, res) => {
     // Notify the other side (fault-tolerant).
     try {
       const recipients = [];
-      if (kpi.assignee && kpi.assignee !== req.user.email) {
-        recipients.push(kpi.assignee);
-      }
+      const kpiAssignees = Array.isArray(kpi.assignees) && kpi.assignees.length > 0
+        ? kpi.assignees
+        : (kpi.assignee ? [kpi.assignee] : []);
+      kpiAssignees.forEach((email) => {
+        if (email && email !== req.user.email) recipients.push(email);
+      });
       if (authorRole === 'staff') {
         const managers = await User.find({ role: 'manager' }).select('email');
         managers.forEach((m) => recipients.push(m.email));

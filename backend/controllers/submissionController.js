@@ -86,7 +86,10 @@ exports.getSubmissions = async (req, res) => {
     const allSubmissions = [];
 
     kpis.forEach(kpi => {
-      const assigneeEmail = kpi.assignee.toLowerCase();
+      const assigneeEmails = Array.isArray(kpi.assignees) && kpi.assignees.length > 0
+        ? kpi.assignees
+        : (kpi.assignee ? [kpi.assignee] : []);
+      const assigneeEmail = (assigneeEmails[0] || '').toLowerCase();
       const staffUser = userMap[assigneeEmail] || null;
 
       // Sort submissions by creation date ascending to correctly trace progress history
@@ -154,7 +157,7 @@ exports.getSubmissions = async (req, res) => {
           },
           staff: {
             name: `${firstName} ${lastName}`,
-            email: kpi.assignee,
+            email: assigneeEmails.join(', '),
             initials,
             bgColor: colors.bg,
             textColor: colors.text,
@@ -223,7 +226,10 @@ exports.getSubmissionById = async (req, res) => {
     }
 
     // Lookup assignee User profile details
-    const staffUser = await User.findOne({ email: kpi.assignee });
+    const primaryEmail = (Array.isArray(kpi.assignees) && kpi.assignees.length > 0)
+      ? kpi.assignees[0]
+      : (kpi.assignee || null);
+    const staffUser = primaryEmail ? await User.findOne({ email: primaryEmail }) : null;
 
     // Calculate progress.old: the progressValue of the latest approved submission before this one, or 0 if none
     const sortedSubs = [...kpi.submissions].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -421,7 +427,9 @@ exports.reviewSubmission = async (req, res) => {
     // 4. Record audit entry in Activity collection
     try {
       const newActivity = new Activity({
-        assignee: kpi.assignee,
+        assignee: (Array.isArray(kpi.assignees) && kpi.assignees.length > 0)
+          ? kpi.assignees[0]
+          : (kpi.assignee || 'unknown'),
         title: activityTitle,
         desc: activityDesc,
         type: activityType,

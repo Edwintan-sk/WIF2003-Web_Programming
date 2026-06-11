@@ -1,0 +1,10 @@
+# Personal study/reference docs — not for the repo
+docs/
+
+# AI assistant files
+.claude/
+.cursorrules
+.cursor/
+.aider*
+.copilot/
+CLAUDE.md

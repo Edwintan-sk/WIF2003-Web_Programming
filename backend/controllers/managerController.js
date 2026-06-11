@@ -59,10 +59,14 @@ exports.getManagerDashboard = async (req, res) => {
       if (statusDist[kpi.status] !== undefined) statusDist[kpi.status] += 1;
       else statusDist[kpi.status] = 1;
 
-      const email = kpi.assignee || 'unassigned';
-      if (!perStaff[email]) perStaff[email] = { total: 0, scoreSum: 0 };
-      perStaff[email].total += 1;
-      perStaff[email].scoreSum += kpi.achievementScore || 0;
+      const emailList = (Array.isArray(kpi.assignees) && kpi.assignees.length > 0)
+        ? kpi.assignees
+        : (kpi.assignee ? [kpi.assignee] : ['unassigned']);
+      emailList.forEach((email) => {
+        if (!perStaff[email]) perStaff[email] = { total: 0, scoreSum: 0 };
+        perStaff[email].total += 1;
+        perStaff[email].scoreSum += kpi.achievementScore || 0;
+      });
     });
 
     const totalKpis = kpis.length;

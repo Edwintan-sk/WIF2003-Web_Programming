@@ -55,7 +55,7 @@ exports.getDashboardData = async (req, res) => {
 
     // Aggregation pipeline for calculating dashboard stats directly in MongoDB
     const statsPipeline = await Kpi.aggregate([
-      { $match: { assignee: assigneeEmail } },
+      { $match: { assignees: assigneeEmail } },
       {
         $group: {
           _id: null,
@@ -133,9 +133,9 @@ exports.getDashboardData = async (req, res) => {
     ];
 
     // Fetch limited active KPIs to avoid memory bloat
-    const activeKpiDocs = await Kpi.find({ 
-      assignee: assigneeEmail, 
-      status: { $ne: KPI_STATUS.COMPLETED } 
+    const activeKpiDocs = await Kpi.find({
+      assignees: assigneeEmail,
+      status: { $ne: KPI_STATUS.COMPLETED }
     }).sort({ targetDate: 1 }).limit(10);
 
     const activeKpis = activeKpiDocs.map(kpi => {
@@ -200,11 +200,11 @@ exports.getAssignedKpis = async (req, res) => {
 
     // Fetch user KPIs with pagination, sorting by urgency (due date ascending)
     const [kpis, total] = await Promise.all([
-      Kpi.find({ assignee: assigneeEmail })
+      Kpi.find({ assignees: assigneeEmail })
         .sort({ targetDate: 1 })
         .skip(skip)
         .limit(limit),
-      Kpi.countDocuments({ assignee: assigneeEmail })
+      Kpi.countDocuments({ assignees: assigneeEmail })
     ]);
 
     const formattedKpis = kpis.map(kpi => {
@@ -369,7 +369,7 @@ exports.submitProgress = async (req, res) => {
     };
 
     while (retries > 0) {
-      const kpi = await Kpi.findOne({ _id: kpiId, assignee: assigneeEmail });
+      const kpi = await Kpi.findOne({ _id: kpiId, assignees: assigneeEmail });
       if (!kpi) {
         return res.status(404).json({ message: 'KPI not found' });
       }
@@ -397,7 +397,7 @@ exports.submitProgress = async (req, res) => {
 
       // Perform atomic update with version checking to prevent lost updates
       updatedKpi = await Kpi.findOneAndUpdate(
-        { _id: kpiId, assignee: assigneeEmail, __v: kpi.__v },
+        { _id: kpiId, assignees: assigneeEmail, __v: kpi.__v },
         {
           $push: { submissions: newSubmission },
           $set: {
@@ -465,6 +465,268 @@ exports.submitProgress = async (req, res) => {
     });
   } catch (error) {
     console.error(`Error in submitProgress: ${error.stack}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+// ── Manager KPI CRUD ─────────────────────────────────────────────────────────
+
+/**
+ * @desc    Get all KPIs with optional filters and pagination
+ * @route   GET /api/kpi
+ * @access  Protected (Manager only)
+ */
+exports.getAllKpis = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (req.query.category) filter.category = req.query.category;
+    if (req.query.status) filter.status = req.query.status;
+    if (req.query.assignee) {
+      if (req.query.assignee === 'unassigned') {
+        filter.assignees = { $size: 0 };
+      } else {
+        filter.assignees = req.query.assignee;
+      }
+    }
+
+    const [kpis, total] = await Promise.all([
+      Kpi.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Kpi.countDocuments(filter)
+    ]);
+
+    res.status(200).json({
+      data: kpis,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error(`Error in getAllKpis: ${error.stack}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+/**
+ * @desc    Get a single KPI by ID
+ * @route   GET /api/kpi/:id
+ * @access  Protected (Manager only)
+ */
+exports.getKpiById = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid KPI ID' });
+    }
+    const kpi = await Kpi.findById(req.params.id);
+    if (!kpi) return res.status(404).json({ message: 'KPI not found' });
+    res.status(200).json(kpi);
+  } catch (error) {
+    console.error(`Error in getKpiById: ${error.stack}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+// Derive the display string from targetValue + unit + direction (e.g. "≥ RM 25,000")
+const buildTargetText = (targetValue, unit, direction) => {
+  const dirSymbols = { 'Atleast (≥)': '≥', 'Atmost (≤)': '≤', 'Exact (=)': '=' };
+  const sym = dirSymbols[direction] || '';
+  if (unit === 'RM') return `${sym} RM ${Number(targetValue).toLocaleString()}`.trim();
+  if (unit === '%') return `${sym} ${targetValue}%`.trim();
+  return `${sym} ${targetValue}${unit ? ' ' + unit : ''}`.trim();
+};
+
+/**
+ * @desc    Create a new KPI
+ * @route   POST /api/kpi
+ * @access  Protected (Manager only)
+ */
+exports.createKpi = async (req, res) => {
+  try {
+    const {
+      title, category, targetValue, deadline,
+      unit, direction, description, department,
+      startDate, evidenceRequirements, staffInstructions,
+      milestones, status, assignees
+    } = req.body;
+
+    if (!title || !category || targetValue === undefined || !deadline) {
+      return res.status(400).json({ message: 'title, category, targetValue, and deadline are required' });
+    }
+
+    const mappedMilestones = (milestones || []).map(m => ({
+      title: sanitizeInput(m.label || m.title || ''),
+      percentage: m.percentage,
+      status: MILESTONE_STATUS.PENDING
+    }));
+
+    const kpi = new Kpi({
+      title: sanitizeInput(title),
+      category: sanitizeInput(category),
+      description: sanitizeInput(description || ''),
+      department: sanitizeInput(department || ''),
+      targetValue: Number(targetValue),
+      unit,
+      direction,
+      targetText: buildTargetText(targetValue, unit, direction),
+      startDate: startDate || null,
+      targetDate: deadline,
+      evidenceRequirements: evidenceRequirements || { pdf: false, images: false, spreadsheet: false },
+      staffInstructions: sanitizeInput(staffInstructions || ''),
+      milestones: mappedMilestones,
+      weightage: 100,
+      status: status || KPI_STATUS.NOT_STARTED,
+      assignees: Array.isArray(assignees) ? assignees : []
+    });
+
+    const saved = await kpi.save();
+    res.status(201).json(saved);
+  } catch (error) {
+    console.error(`Error in createKpi: ${error.stack}`);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+/**
+ * @desc    Update an existing KPI
+ * @route   PUT /api/kpi/:id
+ * @access  Protected (Manager only)
+ */
+exports.updateKpi = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid KPI ID' });
+    }
+
+    const {
+      title, category, targetValue, deadline,
+      unit, direction, description, department,
+      startDate, evidenceRequirements, staffInstructions,
+      milestones, status, assignees
+    } = req.body;
+
+    // preserve existing milestone statuses so an update doesn't reset staff progress
+    const mappedMilestones = (milestones || []).map(m => ({
+      title: sanitizeInput(m.label || m.title || ''),
+      percentage: m.percentage,
+      status: m.status || MILESTONE_STATUS.PENDING
+    }));
+
+    const updates = {
+      title: sanitizeInput(title),
+      category: sanitizeInput(category),
+      description: sanitizeInput(description || ''),
+      department: sanitizeInput(department || ''),
+      targetValue: Number(targetValue),
+      unit,
+      direction,
+      targetText: buildTargetText(targetValue, unit, direction),
+      startDate: startDate || null,
+      targetDate: deadline,
+      evidenceRequirements: evidenceRequirements || { pdf: false, images: false, spreadsheet: false },
+      staffInstructions: sanitizeInput(staffInstructions || ''),
+      milestones: mappedMilestones,
+      assignees: Array.isArray(assignees) ? assignees : []
+    };
+    if (status) updates.status = status;
+
+    const updated = await Kpi.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+    if (!updated) return res.status(404).json({ message: 'KPI not found' });
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error(`Error in updateKpi: ${error.stack}`);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+/**
+ * @desc    Delete a KPI by ID
+ * @route   DELETE /api/kpi/:id
+ * @access  Protected (Manager only)
+ */
+exports.deleteKpi = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid KPI ID' });
+    }
+    const deleted = await Kpi.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: 'KPI not found' });
+    res.status(200).json({ message: 'KPI deleted successfully', kpi: deleted });
+  } catch (error) {
+    console.error(`Error in deleteKpi: ${error.stack}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+/**
+ * @desc    Update only the assignees array for a KPI
+ * @route   PATCH /api/kpi/:id/assignees
+ * @access  Protected (Manager only)
+ */
+exports.updateAssignees = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid KPI ID' });
+    }
+    const { assignees } = req.body;
+    if (!Array.isArray(assignees)) {
+      return res.status(400).json({ message: 'assignees must be an array' });
+    }
+    const updated = await Kpi.findByIdAndUpdate(
+      req.params.id,
+      { assignees },
+      { new: true, runValidators: false }
+    );
+    if (!updated) return res.status(404).json({ message: 'KPI not found' });
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error(`Error in updateAssignees: ${error.stack}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+/**
+ * @desc    Send in-app notifications to all current assignees of a KPI
+ * @route   POST /api/kpi/:id/notify-assignees
+ * @access  Protected (Manager only)
+ */
+exports.notifyAssignees = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid KPI ID' });
+    }
+    const kpi = await Kpi.findById(req.params.id);
+    if (!kpi) return res.status(404).json({ message: 'KPI not found' });
+
+    const recipients = kpi.assignees || [];
+    if (recipients.length === 0) {
+      return res.status(400).json({ message: 'No assignees to notify' });
+    }
+
+    const deadlineStr = kpi.targetDate
+      ? new Date(kpi.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : 'No deadline';
+
+    await createNotifications(recipients, {
+      tag: 'KPI',
+      category: 'action',
+      title: `You have been assigned: ${kpi.title}`,
+      description: `Deadline: ${deadlineStr}`,
+      link: '/staff/my-kpis',
+      kpiId: kpi._id,
+    });
+
+    res.status(200).json({ message: `Notified ${recipients.length} assignee(s)` });
+  } catch (error) {
+    console.error(`Error in notifyAssignees: ${error.stack}`);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };

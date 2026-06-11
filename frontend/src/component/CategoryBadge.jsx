@@ -1,11 +1,12 @@
 import React from 'react';
 
+// Keys/colors mirror backend constants.js CATEGORY_COLORS for the 5 real categories.
 const CATEGORY_STYLES = {
-  'community': { bg: '#E8F0ED', color: '#0B5E3A' },
-  'content': { bg: '#FDECEE', color: '#DC3545' },
-  'project mgmt': { bg: '#E6F0FD', color: '#0B5ED7' },
-  'partnerships': { bg: '#E0F2F1', color: '#00796B' },
-  'target': { bg: '#FFF3CD', color: '#856404' },
+  'community': { bg: '#e2efe9', color: '#183628' },
+  'content': { bg: '#fae3e0', color: '#de5c44' },
+  'internal': { bg: '#faebd7', color: '#c99552' },
+  'partnerships': { bg: '#e6f4ea', color: '#1b6a38' },
+  'project mgmt': { bg: '#e6ebf1', color: '#597495' },
 };
 
 const DEFAULT_STYLE = { bg: '#F0EAE0', color: '#1A1A1A' };

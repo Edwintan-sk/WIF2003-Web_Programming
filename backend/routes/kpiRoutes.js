@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const Kpi = require('../models/Kpi.js');
 const { protectRoute } = require('../middleware/authMiddleware.js');
 const kpiController = require('../controllers/kpiController.js');
 const submissionController = require('../controllers/submissionController.js');
@@ -36,38 +35,13 @@ router.get('/submissions', protectRoute, requireManager, submissionController.ge
 router.get('/submissions/:id', protectRoute, requireManager, submissionController.getSubmissionById);
 router.post('/submissions/:id/review', protectRoute, requireManager, submissionController.reviewSubmission);
 
-// --- Existing Legacy Routes (Preserved for compatibility) ---
-
-// 4. GET all KPIs from database
-router.get('/', async (req, res) => {
-  try {
-    const kpis = await Kpi.find().sort({ createdAt: -1 });
-    res.status(200).json(kpis);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// 5. POST create a new KPI
-router.post('/', async (req, res) => {
-  try {
-    const newKpi = new Kpi(req.body);
-    const savedKpi = await newKpi.save();
-    res.status(201).json(savedKpi);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-// 6. PUT update an existing KPI or progress
-router.put('/:id', async (req, res) => {
-  try {
-    const updatedKpi = await Kpi.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-    if (!updatedKpi) return res.status(404).json({ message: "KPI not found" });
-    res.status(200).json(updatedKpi);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
+// Manager CRUD routes — must come after /submissions* so those aren't shadowed by /:id
+router.get('/', protectRoute, requireManager, kpiController.getAllKpis);
+router.post('/', protectRoute, requireManager, kpiController.createKpi);
+router.get('/:id', protectRoute, requireManager, kpiController.getKpiById);
+router.put('/:id', protectRoute, requireManager, kpiController.updateKpi);
+router.patch('/:id/assignees', protectRoute, requireManager, kpiController.updateAssignees);
+router.post('/:id/notify-assignees', protectRoute, requireManager, kpiController.notifyAssignees);
+router.delete('/:id', protectRoute, requireManager, kpiController.deleteKpi);
 
 module.exports = router;

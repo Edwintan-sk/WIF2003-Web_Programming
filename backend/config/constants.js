@@ -3,6 +3,7 @@
  */
 
 const KPI_STATUS = {
+  DRAFT: 'Draft',
   NOT_STARTED: 'Not Started',
   IN_PROGRESS: 'In Progress',
   UNDER_REVIEW: 'Under Review',

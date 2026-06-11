@@ -27,6 +27,7 @@ app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/kpi', require('./routes/kpiRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/comments', require('./routes/commentRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 
 // Root Health Check Route
 app.get('/', (req, res) => {

@@ -1,7 +1,7 @@
 // Reusable staff assignee row with avatar, name, and progress bar.
 // Used in the Assignment Center right panel.
 // Props: staff { initials, name, progress (0-100) }
-const StaffAssigneeRow = ({ staff }) => {
+const StaffAssigneeRow = ({ staff, onRemove }) => {
   return (
     <div
       className="d-flex align-items-center gap-3 py-3"
@@ -58,6 +58,16 @@ const StaffAssigneeRow = ({ staff }) => {
       >
         {staff.progress}%
       </span>
+
+      {onRemove && (
+        <span
+          role="button"
+          style={{ cursor: 'pointer', color: '#A8A092', fontSize: '16px', lineHeight: 1, marginLeft: '4px', flexShrink: 0 }}
+          onClick={onRemove}
+        >
+          ×
+        </span>
+      )}
     </div>
   );
 };

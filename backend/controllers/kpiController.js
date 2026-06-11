@@ -21,6 +21,17 @@ const sanitizeInput = (str) => {
   return str.replace(/<[^>]*>/g, '').trim();
 };
 
+const assignedTo = (email) => ({
+  $or: [
+    { assignee: email },
+    { assignees: email }
+  ]
+});
+
+const getPrimaryAssignee = (kpi, submission = null) => (
+  submission?.assignee || kpi.assignee || kpi.assignees?.[0] || ''
+);
+
 /**
  * Helper to calculate relative time from a given date.
  * @param {Date|string} date - The date to format
@@ -95,7 +106,7 @@ exports.getDashboardData = async (req, res) => {
 
     // Aggregation pipeline for calculating dashboard stats directly in MongoDB
     const statsPipeline = await Kpi.aggregate([
-      { $match: { assignee: assigneeEmail } },
+      { $match: assignedTo(assigneeEmail) },
       {
         $group: {
           _id: null,
@@ -253,11 +264,11 @@ exports.getAssignedKpis = async (req, res) => {
 
     // Fetch user KPIs with pagination, sorting by urgency (due date ascending)
     const [kpis, total] = await Promise.all([
-      Kpi.find({ assignee: assigneeEmail })
+      Kpi.find(assignedTo(assigneeEmail))
         .sort({ targetDate: 1 })
         .skip(skip)
         .limit(limit),
-      Kpi.countDocuments({ assignee: assigneeEmail })
+      Kpi.countDocuments(assignedTo(assigneeEmail))
     ]);
 
     const formattedKpis = kpis.map(kpi => {
@@ -429,6 +440,7 @@ exports.submitProgress = async (req, res) => {
     let retries = 3;
     let updatedKpi = null;
     const newSubmission = {
+      assignee: assigneeEmail,
       progressValue: metricNum,
       notes: sanitizedNotes,
       evidenceUrl: sanitizedEvidenceUrl,
@@ -437,7 +449,7 @@ exports.submitProgress = async (req, res) => {
     };
 
     while (retries > 0) {
-      const kpi = await Kpi.findOne({ _id: kpiId, assignee: assigneeEmail });
+      const kpi = await Kpi.findOne({ _id: kpiId, ...assignedTo(assigneeEmail) });
       if (!kpi) {
         return res.status(404).json({ message: 'KPI not found' });
       }
@@ -450,7 +462,7 @@ exports.submitProgress = async (req, res) => {
 
       // Perform atomic update with version checking to prevent lost updates
       updatedKpi = await Kpi.findOneAndUpdate(
-        { _id: kpiId, assignee: assigneeEmail, __v: kpi.__v },
+        { _id: kpiId, __v: kpi.__v, ...assignedTo(assigneeEmail) },
         {
           $push: { submissions: newSubmission },
           $set: {
@@ -522,6 +534,243 @@ exports.submitProgress = async (req, res) => {
   }
 };
 
+// Manager KPI CRUD
+
+exports.getAllKpis = async (req, res) => {
+  try {
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 100);
+    const skip = (page - 1) * limit;
+    const filter = {};
+
+    if (req.query.category) filter.category = req.query.category;
+    if (req.query.status) filter.status = req.query.status;
+    if (req.query.assignee === 'unassigned') {
+      filter.$and = [
+        { $or: [{ assignee: '' }, { assignee: { $exists: false } }] },
+        { $or: [{ assignees: { $size: 0 } }, { assignees: { $exists: false } }] }
+      ];
+    } else if (req.query.assignee) {
+      Object.assign(filter, assignedTo(req.query.assignee));
+    }
+
+    const [kpis, total] = await Promise.all([
+      Kpi.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Kpi.countDocuments(filter)
+    ]);
+
+    res.status(200).json({
+      data: kpis,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.error(`Error in getAllKpis: ${error.stack}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+exports.getKpiById = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid KPI ID' });
+    }
+    const kpi = await Kpi.findById(req.params.id);
+    if (!kpi) return res.status(404).json({ message: 'KPI not found' });
+    res.status(200).json(kpi);
+  } catch (error) {
+    console.error(`Error in getKpiById: ${error.stack}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+const buildTargetText = (targetValue, unit, direction) => {
+  const symbols = {
+    'Atleast (>=)': '>=',
+    'Atmost (<=)': '<=',
+    'Atleast (≥)': '≥',
+    'Atmost (≤)': '≤',
+    'Exact (=)': '='
+  };
+  const symbol = symbols[direction] || '';
+  if (unit === 'RM') return `${symbol} RM ${Number(targetValue).toLocaleString()}`.trim();
+  if (unit === '%') return `${symbol} ${targetValue}%`.trim();
+  return `${symbol} ${targetValue}${unit ? ` ${unit}` : ''}`.trim();
+};
+
+const mapKpiPayload = (body, preserveStatus = false) => {
+  const {
+    title,
+    category,
+    targetValue,
+    deadline,
+    unit,
+    direction,
+    description,
+    department,
+    startDate,
+    evidenceRequirements,
+    staffInstructions,
+    milestones,
+    status,
+    assignees
+  } = body;
+
+  const normalizedAssignees = Array.isArray(assignees)
+    ? [...new Set(assignees.map((email) => sanitizeInput(email)).filter(Boolean))]
+    : [];
+  const evidence = evidenceRequirements || {};
+  const payload = {
+    title: sanitizeInput(title),
+    category: sanitizeInput(category),
+    description: sanitizeInput(description || ''),
+    department: sanitizeInput(department || ''),
+    targetValue: Number(targetValue),
+    unit: sanitizeInput(unit || ''),
+    direction: sanitizeInput(direction || ''),
+    targetText: buildTargetText(targetValue, unit, direction),
+    startDate: startDate || null,
+    targetDate: deadline,
+    evidenceRequirements: {
+      pdf: Boolean(evidence.pdf),
+      images: Boolean(evidence.images),
+      spreadsheet: Boolean(evidence.spreadsheet)
+    },
+    // Keep flat evidence flags synchronized for existing staff pages.
+    evidencePdf: Boolean(evidence.pdf),
+    evidenceImages: Boolean(evidence.images),
+    evidenceSpreadsheet: Boolean(evidence.spreadsheet),
+    staffInstructions: sanitizeInput(staffInstructions || ''),
+    milestones: (milestones || []).map((milestone) => ({
+      title: sanitizeInput(milestone.label || milestone.title || ''),
+      label: sanitizeInput(milestone.label || milestone.title || ''),
+      percentage: milestone.percentage,
+      status: milestone.status || MILESTONE_STATUS.PENDING
+    })),
+    assignees: normalizedAssignees,
+    // Retain a primary assignee for legacy dashboard and activity records.
+    assignee: normalizedAssignees[0] || ''
+  };
+
+  if (!preserveStatus || status) {
+    payload.status = status || KPI_STATUS.NOT_STARTED;
+  }
+  return payload;
+};
+
+exports.createKpi = async (req, res) => {
+  try {
+    const { title, category, targetValue, deadline } = req.body;
+    if (!title || !category || targetValue === undefined || !deadline) {
+      return res.status(400).json({
+        message: 'title, category, targetValue, and deadline are required'
+      });
+    }
+    if (!Number.isFinite(Number(targetValue))) {
+      return res.status(400).json({ message: 'targetValue must be a number' });
+    }
+
+    const saved = await Kpi.create(mapKpiPayload(req.body));
+    res.status(201).json(saved);
+  } catch (error) {
+    console.error(`Error in createKpi: ${error.stack}`);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+exports.updateKpi = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid KPI ID' });
+    }
+    if (!Number.isFinite(Number(req.body.targetValue))) {
+      return res.status(400).json({ message: 'targetValue must be a number' });
+    }
+
+    const updated = await Kpi.findByIdAndUpdate(
+      req.params.id,
+      mapKpiPayload(req.body, true),
+      { new: true, runValidators: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'KPI not found' });
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error(`Error in updateKpi: ${error.stack}`);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+exports.updateAssignees = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid KPI ID' });
+    }
+    if (!Array.isArray(req.body.assignees)) {
+      return res.status(400).json({ message: 'assignees must be an array' });
+    }
+
+    const assignees = [...new Set(
+      req.body.assignees.map((email) => sanitizeInput(email)).filter(Boolean)
+    )];
+    const updated = await Kpi.findByIdAndUpdate(
+      req.params.id,
+      { assignees, assignee: assignees[0] || '' },
+      { new: true, runValidators: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'KPI not found' });
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error(`Error in updateAssignees: ${error.stack}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+exports.notifyAssignees = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid KPI ID' });
+    }
+    const kpi = await Kpi.findById(req.params.id);
+    if (!kpi) return res.status(404).json({ message: 'KPI not found' });
+
+    const recipients = kpi.assignees?.length
+      ? kpi.assignees
+      : (kpi.assignee ? [kpi.assignee] : []);
+    if (recipients.length === 0) {
+      return res.status(400).json({ message: 'No assignees to notify' });
+    }
+
+    const deadline = kpi.targetDate
+      ? new Date(kpi.targetDate).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      })
+      : 'No deadline';
+
+    await createNotifications(recipients, {
+      tag: 'KPI',
+      category: 'action',
+      title: `You have been assigned: ${kpi.title}`,
+      description: `Deadline: ${deadline}`,
+      link: '/staff/my-kpis',
+      kpiId: kpi._id
+    });
+
+    res.status(200).json({ message: `Notified ${recipients.length} assignee(s)` });
+  } catch (error) {
+    console.error(`Error in notifyAssignees: ${error.stack}`);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
 /**
  * @desc    Get manager dashboard stats
  * @route   GET /api/kpi/manager/dashboard
@@ -549,9 +798,10 @@ exports.getManagerDashboardData = async (req, res) => {
         completedCount++;
       }
       
-      if (kpi.assignee) {
-        uniqueAssignees.add(kpi.assignee);
-      }
+      const assignedEmails = kpi.assignees?.length
+        ? kpi.assignees
+        : (kpi.assignee ? [kpi.assignee] : []);
+      assignedEmails.forEach((email) => uniqueAssignees.add(email));
       
       if (kpi.submissions && kpi.submissions.length > 0) {
         const pendingSubmissions = kpi.submissions.filter(sub => sub.status === 'Pending');
@@ -574,7 +824,9 @@ exports.getManagerDashboardData = async (req, res) => {
     // Build team progress overview dynamically
     const teamProgress = [];
     for (const user of staffUsers) {
-      const userKpis = allKpis.filter(k => k.assignee === user.email);
+      const userKpis = allKpis.filter((kpi) => (
+        kpi.assignee === user.email || kpi.assignees?.includes(user.email)
+      ));
       let avgScore = 0;
       if (userKpis.length > 0) {
         const total = userKpis.reduce((sum, k) => sum + (k.achievementScore || 0), 0);
@@ -662,22 +914,6 @@ exports.approveSubmission = async (req, res) => {
 };
 
 /**
- * @desc    Get a single KPI by ID
- * @route   GET /api/kpi/:id
- * @access  Protected
- */
-exports.getKpiById = async (req, res) => {
-  try {
-    const kpi = await Kpi.findById(req.params.id);
-    if (!kpi) return res.status(404).json({ message: "KPI not found" });
-    res.status(200).json(kpi);
-  } catch (error) {
-    console.error('Error in getKpiById:', error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-/**
  * @desc    Delete a KPI by ID
  * @route   DELETE /api/kpi/:id
  * @access  Protected (Manager only)
@@ -712,7 +948,8 @@ exports.getSubmissions = async (req, res) => {
     for (const kpi of kpis) {
       if (kpi.submissions && kpi.submissions.length > 0) {
         for (const sub of kpi.submissions) {
-          const staffUser = userMap[kpi.assignee];
+          const submissionAssignee = getPrimaryAssignee(kpi, sub);
+          const staffUser = userMap[submissionAssignee];
           
           let oldProgress = 0;
           const approvedSubs = kpi.submissions.filter(s => s.status === 'Approved' && s.createdAt < sub.createdAt);
@@ -725,8 +962,8 @@ exports.getSubmissions = async (req, res) => {
             id: sub._id,
             kpiId: kpi._id,
             kpiTitle: kpi.title,
-            assignee: kpi.assignee,
-            staffName: staffUser ? `${staffUser.firstName} ${staffUser.lastName}` : kpi.assignee,
+            assignee: submissionAssignee,
+            staffName: staffUser ? `${staffUser.firstName} ${staffUser.lastName}` : submissionAssignee,
             staffRole: staffUser ? staffUser.roleAtShop || staffUser.positionTitle || 'Staff' : 'Staff',
             staffInitials: staffUser ? `${staffUser.firstName[0]}${staffUser.lastName[0]}`.toUpperCase() : 'ST',
             progressValue: sub.progressValue,
@@ -769,7 +1006,8 @@ exports.getSubmissionById = async (req, res) => {
       return res.status(404).json({ message: 'Submission not found' });
     }
     const User = require('../models/User');
-    const staffUser = await User.findOne({ email: kpi.assignee });
+    const submissionAssignee = getPrimaryAssignee(kpi, sub);
+    const staffUser = await User.findOne({ email: submissionAssignee });
 
     // Calculate previous progress score before this submission
     let oldProgress = 0;
@@ -784,9 +1022,9 @@ exports.getSubmissionById = async (req, res) => {
       kpiId: kpi._id,
       kpiTitle: kpi.title,
       kpiDescription: kpi.description || kpi.targetText || '',
-      assignee: kpi.assignee,
+      assignee: submissionAssignee,
       staff: {
-        name: staffUser ? `${staffUser.firstName} ${staffUser.lastName}` : kpi.assignee,
+        name: staffUser ? `${staffUser.firstName} ${staffUser.lastName}` : submissionAssignee,
         role: staffUser ? staffUser.roleAtShop || staffUser.positionTitle || 'Staff' : 'Staff',
         initials: staffUser ? `${staffUser.firstName[0]}${staffUser.lastName[0]}`.toUpperCase() : 'ST',
         photoUrl: staffUser ? staffUser.photoUrl : ''
@@ -854,7 +1092,7 @@ exports.handleSubmissionDecision = async (req, res) => {
     try {
       const Activity = require('../models/Activity');
       const newActivity = new Activity({
-        assignee: kpi.assignee,
+        assignee: getPrimaryAssignee(kpi, submission),
         title: `Submission ${status.toLowerCase()}`,
         desc: `Submission for '${kpi.title}' has been ${status.toLowerCase()}.${comment ? ` Reason/Note: ${comment}` : ''}`,
         type: status === 'Approved' ? 'evidence_approved' : status === 'Rejected' ? 'progress_update' : 'revision_requested',

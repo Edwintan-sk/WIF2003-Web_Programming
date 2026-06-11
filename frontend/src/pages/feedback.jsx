@@ -28,7 +28,7 @@ const normalizeKpi = (k, isManager, ownerFallback) => {
         ? new Date(k.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
         : '—',
       status: k.status || '—',
-      owner: k.assignee || '—',
+      owner: (k.assignees && k.assignees.length > 0) ? k.assignees.join(', ') : '—',
     };
   }
   return {
@@ -99,9 +99,7 @@ const FeedbackPage = () => {
         setError(null);
         const endpoint = isManager ? '/api/kpi/' : '/api/kpi/assigned';
         const response = await api.get(endpoint);
-        const raw = isManager
-          ? response.data || []
-          : response.data.data || response.data || [];
+        const raw = response.data.data || response.data || [];
         const list = raw.map((k) => normalizeKpi(k, isManager, ownerName));
         setKpis(list);
         if (list.length > 0) setSelectedKpiId(list[0].id);

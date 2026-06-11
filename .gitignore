@@ -1,3 +1,14 @@
 BACKEND_GUIDELINE.md
 OVERVIEW.md
 TESTPLAN.md
+
+# Personal study/reference docs
+docs/
+
+# AI assistant files
+.claude/
+.cursorrules
+.cursor/
+.aider*
+.copilot/
+CLAUDE.md

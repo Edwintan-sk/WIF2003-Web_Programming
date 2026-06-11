@@ -3,6 +3,7 @@ import { BoxArrowRight } from 'react-bootstrap-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from '../utils/axiosInstance';
+import { getAssetUrl } from '../utils/assetUrl';
 import '../styles/theme.css';
 import { useAuth } from '../context/AuthContext';
 
@@ -25,9 +26,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
     user?.positionTitle ||
     user?.roleAtShop ||
     (user?.role === 'manager' ? 'Manager' : 'Staff');
-  const profilePhotoUrl = user?.photoUrl
-    ? `http://localhost:5000${user.photoUrl}`
-    : null;
+  const profilePhotoUrl = getAssetUrl(user?.photoUrl);
 
   useEffect(() => {
     if (!isManager) {
@@ -75,7 +74,6 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
     { label: "Dashboard", path: "/staff", icon: true },
     { label: "My KPIs", path: "/staff/kpis", icon: true, badge: kpiCount > 0 ? String(kpiCount) : null },
     { label: "Submit progress", path: "/staff/submit", icon: true },
-    { label: "Evidence archive", path: "/staff/archive", icon: true },
   ];
 
   const workspaceLinks = isManager ? managerLinks : staffLinks;
@@ -83,7 +81,6 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
   const communicationLinks = [
     { label: "Notifications", path: isManager ? "/manager/notifications" : "/staff/notifications", icon: true, badge: unreadCount > 0 ? String(unreadCount) : null },
     { label: "Feedback", path: isManager ? "/manager/feedback" : "/staff/feedback", icon: true },
-    { label: isManager ? "Reports" : "Help & Support", path: isManager ? "/reports" : "/help", icon: true },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -168,7 +165,12 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
 
         {/* Profile Section - Swaps based on Manager UI */}
         <div className="mt-auto pt-3">
-          <div className="d-flex align-items-center gap-3 p-3 rounded-4 mb-3 profile-container">
+          <button
+            type="button"
+            className={`d-flex align-items-center gap-3 p-3 rounded-4 mb-3 profile-container profile-nav-button ${isActive('/profile') ? 'active' : ''}`}
+            onClick={() => handleNavigation('/profile')}
+            aria-label="Open profile management"
+          >
             <div className="rounded-circle d-flex align-items-center justify-content-center fw-bold profile-avatar">
               {profilePhotoUrl ? (
                 <img
@@ -189,7 +191,7 @@ const Sidebar = ({ role = "manager", onSwitch = () => {} }) => {
               <div className="small fw-bold text-white">{displayName}</div>
               <div style={{ fontSize: '11px', color: 'var(--sidebar-tag)' }}>{jobTitle}</div>
             </div>
-          </div>
+          </button>
 
           <Nav.Link onClick={handleLogout} className="d-flex align-items-center gap-2 px-3 py-2 sidebar-link rounded-3 fw-normal" style={{ cursor: 'pointer' }}>
             <BoxArrowRight size={18} /> Logout

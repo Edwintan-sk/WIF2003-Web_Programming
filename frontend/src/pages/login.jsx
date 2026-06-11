@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Envelope, Lock, Eye, EyeSlash, CheckCircleFill } from 'react-bootstrap-icons';
 import { useAuth } from '../context/AuthContext';
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [role, setRole] = useState('manager');
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +44,13 @@ function Login() {
 
         <h1 className="auth-title">Welcome back</h1>
         <p className="auth-subtitle">Sign in to your shop / HQ portal.</p>
+
+        {location.state?.message && (
+          <div className="info-banner" role="status">
+            <CheckCircleFill size={12} style={{ marginTop: 2, flexShrink: 0 }} />
+            <span>{location.state.message}</span>
+          </div>
+        )}
 
         <div className="role-toggle">
           <button

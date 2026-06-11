@@ -14,6 +14,7 @@ import ForgotPassword from './pages/forgot-password';
 import ResetPassword from './pages/reset-password';
 import NotificationDashboard from './pages/notification-dashboard';
 import Feedback from './pages/feedback';
+import Profile from './pages/profile';
 import { useAuth } from './context/AuthContext';
 
 function ProtectedRoute({ children, allowedRole }) {
@@ -58,18 +59,17 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
         {/* Staff Routes */}
         <Route path="/" element={<Navigate to="/staff" replace />} />
         <Route path="/staff" element={<ProtectedRoute allowedRole="staff"><StaffDashboard /></ProtectedRoute>} />
         <Route path="/staff/kpis" element={<ProtectedRoute allowedRole="staff"><StaffAssignedKPI /></ProtectedRoute>} />
         <Route path="/staff/submit" element={<ProtectedRoute allowedRole="staff"><StaffSubmitProgress /></ProtectedRoute>} />
-        <Route path="/staff/archive" element={<ProtectedRoute allowedRole="staff"><StaffDashboard /></ProtectedRoute>} />
         
         {/* Staff Individual Communication Routes */}
         <Route path="/staff/notifications" element={<ProtectedRoute allowedRole="staff"><NotificationDashboard /></ProtectedRoute>} />
         <Route path="/staff/feedback" element={<ProtectedRoute allowedRole="staff"><Feedback /></ProtectedRoute>} />
-        <Route path="/help" element={<ProtectedRoute allowedRole="staff"><StaffDashboard /></ProtectedRoute>} />
 
         {/* Manager Routes */}
         <Route path="/manager" element={<ProtectedRoute allowedRole="manager"><ManagerDashboard /></ProtectedRoute>} />
@@ -83,7 +83,6 @@ function App() {
         {/* Manager Individual Communication Routes */}
         <Route path="/manager/notifications" element={<ProtectedRoute allowedRole="manager"><NotificationDashboard /></ProtectedRoute>} />
         <Route path="/manager/feedback" element={<ProtectedRoute allowedRole="manager"><Feedback /></ProtectedRoute>} />
-        <Route path="/reports" element={<ProtectedRoute allowedRole="manager"><ManagerDashboard /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

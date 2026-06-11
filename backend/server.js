@@ -23,6 +23,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Route Middleware
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/kpi', require('./routes/kpiRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/comments', require('./routes/commentRoutes'));

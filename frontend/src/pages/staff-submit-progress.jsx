@@ -4,6 +4,7 @@ import { Search, ArrowRight, Trash } from 'react-bootstrap-icons';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Sidebar from '../component/Sidebar';
 import api from '../utils/axiosInstance';
+import { getAssetUrl } from '../utils/assetUrl';
 import '../styles/theme.css'; 
 
 export default function StaffSubmitProgress() {
@@ -476,7 +477,7 @@ export default function StaffSubmitProgress() {
                                             return (
                                               <a
                                                 key={uidx}
-                                                href={`http://localhost:5000${url}`}
+                                                href={getAssetUrl(url)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="badge bg-light text-dark border d-inline-flex align-items-center gap-1 text-decoration-none"
@@ -489,7 +490,7 @@ export default function StaffSubmitProgress() {
                                           })
                                         ) : (
                                           <a
-                                            href={`http://localhost:5000${sub.evidenceUrl}`}
+                                            href={getAssetUrl(sub.evidenceUrl)}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="badge bg-light text-dark border d-inline-flex align-items-center gap-1 text-decoration-none"

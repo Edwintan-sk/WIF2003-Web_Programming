@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Download, Plus, Check2, Exclamati
 import { useNavigate, useParams } from 'react-router-dom';
 import Sidebar from '../component/Sidebar';
 import axiosInstance from '../utils/axiosInstance';
+import { getAssetUrl } from '../utils/assetUrl';
 import '../styles/theme.css';
 
 const getRelativeTime = (dateString) => {
@@ -56,7 +57,7 @@ const EvidenceDetailView = () => {
   const handleDecisionSubmit = async () => {
     try {
       setSaving(true);
-      
+
       let status = 'Approved';
       if (decision === 'revision') status = 'Revision requested';
       if (decision === 'reject') status = 'Rejected';
@@ -121,11 +122,7 @@ const EvidenceDetailView = () => {
     ? submissionData.evidenceUrls
     : (submissionData?.evidenceUrl ? [submissionData.evidenceUrl] : []);
 
-  const activeFileUrl = files[activeFile]
-    ? (files[activeFile].startsWith('http') 
-        ? files[activeFile] 
-        : `http://localhost:5000${files[activeFile]}`)
-    : null;
+  const activeFileUrl = getAssetUrl(files[activeFile]);
 
   const activeFileName = files[activeFile] ? files[activeFile].split('/').pop() : 'No file';
   const activeFileExtension = files[activeFile] ? files[activeFile].split('.').pop().toUpperCase() : 'NONE';
@@ -134,10 +131,10 @@ const EvidenceDetailView = () => {
   return (
     <div className="d-flex">
       <Sidebar role="manager" />
-      
-      <main style={{ 
-        marginLeft: 'var(--sidebar-width)', 
-        flex: 1, 
+
+      <main style={{
+        marginLeft: 'var(--sidebar-width)',
+        flex: 1,
         padding: '40px 60px',
         backgroundColor: 'var(--main-bg)',
         minHeight: '100vh'
@@ -178,8 +175,8 @@ const EvidenceDetailView = () => {
                     <div
                       key={idx}
                       className="d-flex align-items-center gap-2 px-3 py-2 rounded-2 border bg-white shadow-sm"
-                      style={{ 
-                        fontSize: '11px', 
+                      style={{
+                        fontSize: '11px',
                         borderColor: isSelected ? 'var(--text-main)' : '#EAE3D2',
                         cursor: 'pointer',
                         borderWidth: isSelected ? '1.5px' : '1px',
@@ -205,25 +202,25 @@ const EvidenceDetailView = () => {
             <div className="viewer-container rounded-4 shadow-sm mb-3" style={{ backgroundColor: '#2A3D37', height: '550px', position: 'relative', overflow: 'auto', display: 'flex' }}>
               {activeFileUrl ? (
                 isActiveImage ? (
-                  <img 
+                  <img
                     src={activeFileUrl}
-                    alt="Evidence" 
-                    style={{ 
-                      width: `${zoom}%`, 
-                      height: `${zoom}%`, 
+                    alt="Evidence"
+                    style={{
+                      width: `${zoom}%`,
+                      height: `${zoom}%`,
                       objectFit: 'contain',
                       margin: 'auto',
                       transition: 'width 0.2s ease, height 0.2s ease'
                     }}
                   />
                 ) : (
-                  <iframe 
+                  <iframe
                     src={activeFileUrl}
                     title="Evidence Document"
-                    style={{ 
-                      width: `${zoom}%`, 
-                      height: `${zoom}%`, 
-                      border: 'none', 
+                    style={{
+                      width: `${zoom}%`,
+                      height: `${zoom}%`,
+                      border: 'none',
                       backgroundColor: '#FFFFFF',
                       margin: 'auto',
                       transition: 'width 0.2s ease, height 0.2s ease'

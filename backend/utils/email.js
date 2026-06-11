@@ -48,14 +48,15 @@ const getTransporter = () => {
 /**
  * Send an email if SMTP is configured; otherwise log it. Never throws.
  * @param {{ to: string, subject: string, text?: string, html?: string }} options
+ * @returns {Promise<boolean>} Whether the message was delivered.
  */
 const sendEmail = async ({ to, subject, text, html }) => {
-  if (!to) return;
+  if (!to) return false;
 
   const t = getTransporter();
   if (!t) {
     console.log(`[email:skipped] To: ${to} | Subject: ${subject}`);
-    return;
+    return false;
   }
 
   try {
@@ -67,8 +68,10 @@ const sendEmail = async ({ to, subject, text, html }) => {
       html,
     });
     console.log(`[email:sent] To: ${to} | Subject: ${subject}`);
+    return true;
   } catch (err) {
     console.error(`[email:error] ${err.message}`);
+    return false;
   }
 };
 

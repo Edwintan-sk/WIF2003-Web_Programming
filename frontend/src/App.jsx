@@ -10,6 +10,8 @@ import CreateEditKpi from './pages/create-edit-kpi';
 import AssignmentCenter from './pages/assignment-center';
 import Login from './pages/login';
 import Register from './pages/register';
+import ForgotPassword from './pages/forgot-password';
+import ResetPassword from './pages/reset-password';
 import NotificationDashboard from './pages/notification-dashboard';
 import Feedback from './pages/feedback';
 import { useAuth } from './context/AuthContext';
@@ -54,6 +56,8 @@ function App() {
         {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Staff Routes */}
         <Route path="/" element={<Navigate to="/staff" replace />} />

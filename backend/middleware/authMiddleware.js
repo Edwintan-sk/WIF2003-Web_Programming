@@ -36,12 +36,24 @@ const protectRoute = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+    const user = await User.findById(decoded.userId).select('+passwordChangedAt');
 
     if (!user || !user.isActive) {
       return res.status(401).json({
         message: 'Authentication account is unavailable.',
       });
+    }
+
+    if (user.passwordChangedAt) {
+      const passwordChangedAtSeconds = Math.floor(
+        user.passwordChangedAt.getTime() / 1000
+      );
+
+      if (decoded.iat < passwordChangedAtSeconds) {
+        return res.status(401).json({
+          message: 'Password changed after this session was created. Please sign in again.',
+        });
+      }
     }
 
     req.user = {

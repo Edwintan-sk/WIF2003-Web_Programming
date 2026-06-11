@@ -1,60 +1,49 @@
-import { useState, useEffect } from 'react';
-import { Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card } from 'react-bootstrap';
 import Sidebar from '../component/Sidebar';
 import StatCard from '../component/StatCard';
-import StaffAssigneeRow from '../component/StaffAssigneeRow';
-import ProgressRing from '../component/ProgressRing';
-import api from '../utils/axiosInstance';
-import { useAuth } from '../context/AuthContext';
 import '../styles/theme.css';
-
-// Short contextual caption shown on each stat card badge.
-const SUB_LABELS = {
-  'OVERALL PROGRESS': 'team avg',
-  'KPIS ASSIGNED': 'total',
-  COMPLETED: 'done',
-  'PENDING REVIEW': 'to review',
-  OVERDUE: 'late',
-};
+import { useEffect, useState } from 'react';
+import axiosInstance from '../utils/axiosInstance';
+import { useNavigate } from 'react-router-dom';
 
 const ManagerDashboard = () => {
-  const { user } = useAuth();
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        setIsLoading(true);
-        setError(null);
-        const response = await api.get('/api/manager/dashboard');
-        setData(response.data);
-      } catch (err) {
-        console.error('Error fetching manager dashboard:', err);
-        setError(err.response?.data?.message || err.message || 'Failed to load dashboard data.');
+        const response = await axiosInstance.get('/api/kpi/manager/dashboard');
+        setDashboardData(response.data);
+      } catch (error) {
+        console.error('Failed to fetch dashboard:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
+    
     fetchDashboard();
   }, []);
-
-  const stats = data?.stats || [];
-  const teamProgress = data?.teamProgress || [];
-  const recentActivity = data?.recentActivity || [];
-  const statusDistribution = data?.statusDistribution || [];
-  const overallProgress = data?.overallProgress || 0;
-
-  const statusTotal = statusDistribution.reduce((sum, s) => sum + s.value, 0);
+  
+  if (loading) {
+    return (
+      <div className="d-flex">
+        <Sidebar role="manager" />
+        <main style={{ marginLeft: 'var(--sidebar-width)', flex: 1, padding: '40px 60px' }}>
+          <p>Loading dashboard...</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="d-flex">
       <Sidebar role="manager" />
-
-      <main style={{
-        marginLeft: 'var(--sidebar-width)',
-        flex: 1,
+      
+      <main style={{ 
+        marginLeft: 'var(--sidebar-width)', 
+        flex: 1, 
         padding: '40px 60px',
         backgroundColor: 'var(--main-bg)',
         minHeight: '100vh'
@@ -62,135 +51,133 @@ const ManagerDashboard = () => {
         <p className="sidebar-header small mb-1">Workspace</p>
         <h3 className="serif-font mb-5">Team dashboard</h3>
 
-        <h1 className="serif-font mb-2">
-          Good afternoon, {user?.englishName || user?.firstName || 'Manager'}.
-        </h1>
-        <p className="text-muted mb-5">Here is how your team is tracking across all KPIs.</p>
+        <h1 className="serif-font mb-2">Good afternoon, Manager.</h1>
+        <p className="text-muted mb-5">Review summary metrics and recent activity feeds below.</p>
 
-        {isLoading ? (
-          <div className="text-center py-5">
-            <Spinner animation="border" className="me-2" />
-            <span className="text-secondary">Loading team dashboard…</span>
-          </div>
-        ) : error ? (
-          <Alert variant="danger">{error}</Alert>
-        ) : (
-          <>
-            {/* Stat Cards */}
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '40px', flexWrap: 'wrap' }}>
-              {stats.map((stat) => (
-                <StatCard
-                  key={stat.label}
-                  title={stat.label}
-                  value={stat.value}
-                  percentage={Boolean(stat.percentage)}
-                  color={stat.color}
-                  subValue={SUB_LABELS[stat.label] || ''}
-                />
-              ))}
-            </div>
+        {/* Stat Cards Container - 5 cards with 20px gap */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '20px', 
+          marginBottom: '40px',
+          flexWrap: 'wrap'
+        }}>
+          <StatCard 
+            title="OVERALL PROGRESS" 
+            value={dashboardData?.overallProgress?.value || 0} 
+            percentage 
+            color="#0B2019" 
+            subValue={dashboardData?.overallProgress?.change || "0%"} 
+          />
+          <StatCard 
+            title="KPIS ASSIGNED" 
+            value={dashboardData?.kpisAssigned?.value || 0} 
+            color="#E85D3F" 
+            subValue={dashboardData?.kpisAssigned?.change || "0"} 
+          />
+          <StatCard 
+            title="COMPLETED" 
+            value={dashboardData?.completed?.value || 0} 
+            color="#28a745" 
+            subValue={dashboardData?.completed?.change || "0"} 
+          />
+          <StatCard 
+            title="PENDING REVIEW" 
+            value={dashboardData?.pendingReview?.value || 0} 
+            color="#ffc107" 
+            subValue={dashboardData?.pendingReview?.change || "0 new"} 
+          />
+          <StatCard 
+            title="OVERDUE" 
+            value={dashboardData?.overdue?.value || 0} 
+            color="#dc3545" 
+            subValue={dashboardData?.overdue?.change || "0"} 
+          />
+        </div>
 
-            {/* Team progress + performance snapshot */}
-            <Row className="g-4 mb-4">
-              <Col lg={8}>
-                <Card className="custom-card h-100">
-                  <Card.Body style={{ padding: '24px' }}>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <h5 className="serif-font mb-0">Team Progress Overview</h5>
-                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                        {teamProgress.length} staff
-                      </span>
-                    </div>
-                    {teamProgress.length === 0 ? (
-                      <p className="text-muted text-center py-4">No assigned KPIs yet.</p>
-                    ) : (
-                      <div className="team-progress-list">
-                        {teamProgress.map((staff) => (
-                          <StaffAssigneeRow
-                            key={staff.email}
-                            staff={{ initials: staff.initials, name: `${staff.name} · ${staff.kpiCount} KPI${staff.kpiCount !== 1 ? 's' : ''}`, progress: staff.progress }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col lg={4}>
-                <Card className="custom-card h-100">
-                  <Card.Body style={{ padding: '24px' }}>
-                    <h5 className="serif-font mb-3">Performance</h5>
-
-                    {/* SVG progress ring — overall achievement score */}
-                    <div className="d-flex justify-content-center mb-4">
-                      <ProgressRing value={overallProgress} size={150} stroke={14} label="Overall progress" />
-                    </div>
-
-                    {/* CSS stacked bar — KPI status distribution */}
-                    <span className="text-secondary fw-bold text-uppercase d-block mb-2" style={{ fontSize: '10px', letterSpacing: '1.5px' }}>
-                      KPI status
-                    </span>
-                    <div className="d-flex w-100 mb-3" style={{ height: '12px', borderRadius: '6px', overflow: 'hidden', backgroundColor: '#EFE9DC' }}>
-                      {statusTotal > 0 && statusDistribution.map((s) => (
-                        <div
-                          key={s.label}
-                          title={`${s.label}: ${s.value}`}
-                          style={{ width: `${(s.value / statusTotal) * 100}%`, backgroundColor: s.color, transition: 'width 0.5s ease' }}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Legend */}
-                    <div className="d-flex flex-column gap-2">
-                      {statusDistribution.map((s) => (
-                        <div key={s.label} className="d-flex align-items-center justify-content-between">
-                          <div className="d-flex align-items-center gap-2">
-                            <span className="rounded-circle" style={{ width: '8px', height: '8px', backgroundColor: s.color, display: 'inline-block' }} />
-                            <span style={{ fontSize: '12px', color: 'var(--text-main)' }}>{s.label}</span>
+        {/* Team Progress Overview Section */}
+        <Row style={{ gap: '20px', display: 'flex' }}>
+          <Col lg={7} style={{ minWidth: '648px', flex: '1 0 648px' }}>
+            <Card className="custom-card">
+              <Card.Body style={{ padding: '24px' }}>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <h5 className="serif-font mb-0">Team Progress Overview</h5>
+                  <span 
+                    style={{ fontSize: '12px', color: 'var(--accent-orange)', textDecoration: 'none', cursor: 'pointer' }}
+                    onClick={() => navigate('/manager/assign')}
+                  >
+                    View all staff &rarr;
+                  </span>
+                </div>
+                <div className="team-progress-list" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {dashboardData?.teamProgress && dashboardData.teamProgress.length > 0 ? (
+                    dashboardData.teamProgress.map((member, idx) => (
+                      <div key={idx} className="d-flex align-items-center justify-content-between pb-3" style={{ borderBottom: '1px solid #FAF5E8' }}>
+                        <div className="d-flex align-items-center gap-3">
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            backgroundColor: '#E8F0ED',
+                            color: '#0B5E3A',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: '12px'
+                          }}>
+                            {member.initials}
                           </div>
-                          <span className="fw-bold" style={{ fontSize: '12px' }}>{s.value}</span>
+                          <div>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#1A1A1A' }}>{member.name}</div>
+                            <div style={{ fontSize: '11px', color: '#6C757D' }}>{member.role} &middot; {member.kpiCount} KPIs</div>
+                          </div>
                         </div>
-                      ))}
-                      {statusDistribution.length === 0 && (
-                        <span className="text-muted" style={{ fontSize: '12px' }}>No KPIs yet.</span>
-                      )}
-                    </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-
-            {/* Recent activity */}
-            <Row className="g-4">
-              <Col lg={12}>
-                <Card className="custom-card">
-                  <Card.Body style={{ padding: '24px' }}>
-                    <h5 className="serif-font mb-4">Recent activity</h5>
-                    {recentActivity.length === 0 ? (
-                      <p className="text-muted text-center py-4">No recent activity.</p>
-                    ) : (
-                      <div className="d-flex flex-column gap-3">
-                        {recentActivity.map((act) => (
-                          <div key={act.id} className="d-flex align-items-start gap-3">
-                            <div className="rounded-circle mt-1" style={{ width: '10px', height: '10px', backgroundColor: act.dotColor, flexShrink: 0 }} />
-                            <div className="flex-grow-1">
-                              <div className="d-flex justify-content-between">
-                                <span className="fw-bold" style={{ fontSize: '13px' }}>{act.title}</span>
-                                <span className="text-muted" style={{ fontSize: '11px' }}>{act.time}</span>
-                              </div>
-                              <p className="mb-0 text-muted" style={{ fontSize: '12px' }}>{act.desc}</p>
-                            </div>
+                        <div style={{ width: '200px' }} className="d-flex align-items-center gap-3">
+                          <div className="progress-bar-wrapper flex-grow-1" style={{ height: '8px', backgroundColor: '#e8e4d9', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ width: `${member.progress}%`, height: '100%', backgroundColor: '#0B2019' }}></div>
                           </div>
-                        ))}
+                          <span style={{ fontSize: '13px', fontWeight: 'bold', minWidth: '35px', textAlign: 'right' }}>{member.progress}%</span>
+                        </div>
                       </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </>
-        )}
+                    ))
+                  ) : (
+                    <p className="text-muted text-center py-4">No team member progress data available.</p>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col lg={4} style={{ minWidth: '360px', flex: '0 0 360px' }}>
+            <Card className="custom-card" style={{ 
+              height: '372px',
+              borderRadius: '18px',
+              padding: '24px'
+            }}>
+              <Card.Body style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <h5 className="serif-font mb-4">Recent activity</h5>
+                <div className="activity-list" style={{ display: 'flex', flexDirection: 'column', gap: '18px', overflowY: 'auto', flex: 1 }}>
+                  {dashboardData?.recentActivity && dashboardData.recentActivity.length > 0 ? (
+                    dashboardData.recentActivity.map((activity, idx) => (
+                      <div key={idx} className="d-flex align-items-start gap-3">
+                        <div 
+                          className="rounded-circle mt-1" 
+                          style={{ width: '8px', height: '8px', backgroundColor: activity.dotColor || '#1b6a38', flexShrink: 0 }}
+                        />
+                        <div style={{ fontSize: '12px' }}>
+                          <div className="fw-bold" style={{ color: 'var(--text-main)' }}>{activity.title}</div>
+                          <div style={{ color: '#6C757D', marginTop: '2px', lineHeight: '1.4' }}>{activity.desc}</div>
+                          <div className="text-muted mt-1" style={{ fontSize: '10px' }}>{activity.time}</div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted text-center py-4">No recent activity logs found.</p>
+                  )}
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </main>
     </div>
   );

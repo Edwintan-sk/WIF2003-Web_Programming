@@ -3,17 +3,9 @@ const router = express.Router();
 const Kpi = require('../models/Kpi.js');
 const { protectRoute } = require('../middleware/authMiddleware.js');
 const kpiController = require('../controllers/kpiController.js');
-const submissionController = require('../controllers/submissionController.js');
+const { requireRole } = require('../middleware/roleMiddleware.js');
 
 const upload = require('../middleware/upload.js');
-
-// Helper middleware to restrict route to managers only
-const requireManager = (req, res, next) => {
-  if (req.user && req.user.role === 'manager') {
-    return next();
-  }
-  return res.status(403).json({ message: 'Forbidden: Managers only' });
-};
 
 // 1. GET dashboard aggregates for logged-in staff member (Protected)
 router.get('/dashboard', protectRoute, kpiController.getDashboardData);
@@ -23,7 +15,7 @@ router.get('/assigned', protectRoute, kpiController.getAssignedKpis);
 
 // 3. POST submit a progress update for review (Protected)
 router.post('/progress', protectRoute, (req, res, next) => {
-  upload.single('evidenceFile')(req, res, (err) => {
+  upload.any()(req, res, (err) => {
     if (err) {
       return res.status(400).json({ message: err.message });
     }
@@ -31,15 +23,8 @@ router.post('/progress', protectRoute, (req, res, next) => {
   });
 }, kpiController.submitProgress);
 
-// Submissions routes (Protected, Manager only)
-router.get('/submissions', protectRoute, requireManager, submissionController.getSubmissions);
-router.get('/submissions/:id', protectRoute, requireManager, submissionController.getSubmissionById);
-router.post('/submissions/:id/review', protectRoute, requireManager, submissionController.reviewSubmission);
-
-// --- Existing Legacy Routes (Preserved for compatibility) ---
-
 // 4. GET all KPIs from database
-router.get('/', async (req, res) => {
+router.get('/', protectRoute, requireRole('manager'), async (req, res) => {
   try {
     const kpis = await Kpi.find().sort({ createdAt: -1 });
     res.status(200).json(kpis);
@@ -49,7 +34,7 @@ router.get('/', async (req, res) => {
 });
 
 // 5. POST create a new KPI
-router.post('/', async (req, res) => {
+router.post('/', protectRoute, requireRole('manager'), async (req, res) => {
   try {
     const newKpi = new Kpi(req.body);
     const savedKpi = await newKpi.save();
@@ -60,7 +45,7 @@ router.post('/', async (req, res) => {
 });
 
 // 6. PUT update an existing KPI or progress
-router.put('/:id', async (req, res) => {
+router.put('/:id', protectRoute, requireRole('manager'), async (req, res) => {
   try {
     const updatedKpi = await Kpi.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!updatedKpi) return res.status(404).json({ message: "KPI not found" });
@@ -69,5 +54,59 @@ router.put('/:id', async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 });
+
+// Manager Dashboard
+router.get(
+  '/manager/dashboard',
+  protectRoute,
+  requireRole('manager'),
+  kpiController.getManagerDashboardData
+);
+
+// Submissions Routes for Manager
+router.get(
+  '/manager/submissions',
+  protectRoute,
+  requireRole('manager'),
+  kpiController.getSubmissions
+);
+
+router.get(
+  '/manager/submissions/:id',
+  protectRoute,
+  requireRole('manager'),
+  kpiController.getSubmissionById
+);
+
+router.patch(
+  '/manager/submissions/:id/decision',
+  protectRoute,
+  requireRole('manager'),
+  kpiController.handleSubmissionDecision
+);
+
+// GET single KPI
+router.get(
+  '/:id',
+  protectRoute,
+  requireRole('manager'),
+  kpiController.getKpiById
+);
+
+// DELETE KPI
+router.delete(
+  '/:id',
+  protectRoute,
+  requireRole('manager'),
+  kpiController.deleteKpi
+);
+
+// Approve Submission (legacy)
+router.patch(
+  '/approve',
+  protectRoute,
+  requireRole('manager'),
+  kpiController.approveSubmission
+);
 
 module.exports = router;

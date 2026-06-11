@@ -41,8 +41,48 @@ const getRelativeTime = (date) => {
 };
 
 /**
+ * Helper to calculate milestone status progression based on percentage thresholds.
+ * @param {Array} milestones - List of milestones
+ * @param {number} achievementScore - Current KPI progress score (0-100)
+ * @returns {Array} Updated milestones list with resolved statuses
+ */
+const calculateMilestones = (milestones, achievementScore) => {
+  if (!milestones || milestones.length === 0) return [];
+
+  // Sort a copy of milestones by percentage ascending to determine "In Progress" transition order correctly
+  const sortedMilestones = [...milestones].sort((a, b) => {
+    const pctA = Number(a.percentage) || 0;
+    const pctB = Number(b.percentage) || 0;
+    return pctA - pctB;
+  });
+
+  // Find the first milestone that is greater than achievementScore. This is "In Progress" (if score < 100).
+  const inProgressMilestone = sortedMilestones.find(m => (Number(m.percentage) || 0) > achievementScore);
+  const inProgressId = inProgressMilestone ? inProgressMilestone._id.toString() : null;
+
+  return milestones.map((milestone) => {
+    const milestonePct = Number(milestone.percentage) || 0;
+    let status = MILESTONE_STATUS.PENDING;
+
+    if (achievementScore >= milestonePct) {
+      status = MILESTONE_STATUS.COMPLETED;
+    } else if (inProgressId && milestone._id.toString() === inProgressId && achievementScore < 100) {
+      status = MILESTONE_STATUS.IN_PROGRESS;
+    }
+
+    return {
+      _id: milestone._id,
+      title: milestone.title,
+      percentage: milestone.percentage,
+      label: milestone.label,
+      status
+    };
+  });
+};
+
+/**
  * @desc    Get dashboard aggregate stats and active KPIs for the logged-in staff
- * @route   GET /api/kpi/dashboard or /api/kpis/dashboard
+ * @route   GET /api/kpi/dashboard
  * @access  Protected (Staff only)
  */
 exports.getDashboardData = async (req, res) => {
@@ -141,6 +181,17 @@ exports.getDashboardData = async (req, res) => {
     const activeKpis = activeKpiDocs.map(kpi => {
       const colors = CATEGORY_COLORS[kpi.category] || DEFAULT_COLORS;
       
+      const latestSubmission = kpi.submissions && kpi.submissions.length > 0 
+        ? kpi.submissions[kpi.submissions.length - 1] 
+        : null;
+
+      let isRevisionRequested = false;
+      let feedback = '';
+      if (latestSubmission && latestSubmission.status === 'Revision requested') {
+        isRevisionRequested = true;
+        feedback = latestSubmission.feedback || '';
+      }
+
       return {
         id: kpi._id,
         category: kpi.category,
@@ -152,7 +203,9 @@ exports.getDashboardData = async (req, res) => {
           ? new Date(kpi.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) 
           : 'No due date',
         progress: kpi.achievementScore,
-        progColor: colors.progColor
+        progColor: colors.progColor,
+        isRevisionRequested,
+        feedback
       };
     });
 
@@ -184,7 +237,7 @@ exports.getDashboardData = async (req, res) => {
 
 /**
  * @desc    Get detailed list of assigned KPIs for the logged-in staff
- * @route   GET /api/kpi/assigned or /api/kpis/assigned
+ * @route   GET /api/kpi/assigned
  * @access  Protected (Staff only)
  */
 exports.getAssignedKpis = async (req, res) => {
@@ -243,7 +296,19 @@ exports.getAssignedKpis = async (req, res) => {
       let uiStatusText = colors.statusText;
       let uiStatusBorder = colors.statusBorder;
 
-      if (kpi.status === KPI_STATUS.UNDER_REVIEW) {
+      // Check if the latest submission was requested for revision
+      const latestSubmission = kpi.submissions && kpi.submissions.length > 0 
+        ? kpi.submissions[kpi.submissions.length - 1] 
+        : null;
+
+      let latestFeedback = '';
+      if (latestSubmission && latestSubmission.status === 'Revision requested') {
+        uiStatus = 'Revision requested';
+        uiStatusBg = '#fff3cd';
+        uiStatusText = '#856404';
+        uiStatusBorder = '#ffeeba';
+        latestFeedback = latestSubmission.feedback || '';
+      } else if (kpi.status === KPI_STATUS.UNDER_REVIEW) {
         uiStatus = 'Under review';
         uiStatusBg = '#faebd7';
         uiStatusText = '#c99552';
@@ -283,6 +348,7 @@ exports.getAssignedKpis = async (req, res) => {
         statusBg: uiStatusBg,
         statusText: uiStatusText,
         statusBorder: uiStatusBorder,
+        feedback: latestFeedback,
         type,
         steps,
         milestones: kpi.milestones,
@@ -304,7 +370,7 @@ exports.getAssignedKpis = async (req, res) => {
 
 /**
  * @desc    Submit a new progress update with sanitization, constraints validation, and concurrency checks
- * @route   POST /api/kpi/progress or /api/kpis/progress
+ * @route   POST /api/kpi/progress
  * @access  Protected (Staff only)
  */
 exports.submitProgress = async (req, res) => {
@@ -314,13 +380,14 @@ exports.submitProgress = async (req, res) => {
     }
 
     let { kpiId, newMetricValue, notes } = req.body;
-    let evidenceUrl = req.body.evidenceUrl || '';
     const assigneeEmail = req.user.email;
-
-    // If a file was uploaded, store ONLY the relative path
-    if (req.file) {
-      evidenceUrl = `/uploads/${req.file.filename}`;
+    let evidenceUrls = [];
+    if (req.files && req.files.length > 0) {
+      evidenceUrls = req.files.map(file => `/uploads/${file.filename}`);
+    } else if (req.file) {
+      evidenceUrls = [`/uploads/${req.file.filename}`];
     }
+    let evidenceUrl = evidenceUrls.length > 0 ? evidenceUrls[0] : (req.body.evidenceUrl || '');
 
     // Inputs validation
     if (!kpiId) {
@@ -365,6 +432,7 @@ exports.submitProgress = async (req, res) => {
       progressValue: metricNum,
       notes: sanitizedNotes,
       evidenceUrl: sanitizedEvidenceUrl,
+      evidenceUrls: evidenceUrls,
       status: SUBMISSION_STATUS.PENDING
     };
 
@@ -373,27 +441,12 @@ exports.submitProgress = async (req, res) => {
       if (!kpi) {
         return res.status(404).json({ message: 'KPI not found' });
       }
-
-      // Calculate milestone auto-progression based on progress percentage
-      let updatedMilestones = [...kpi.milestones];
-      if (kpi.milestones && kpi.milestones.length > 0) {
-        const milestoneCount = kpi.milestones.length;
-        const completedCount = Math.floor((metricNum / 100) * milestoneCount);
-
-        updatedMilestones = kpi.milestones.map((milestone, idx) => {
-          let status = MILESTONE_STATUS.PENDING;
-          if (idx < completedCount) {
-            status = MILESTONE_STATUS.COMPLETED;
-          } else if (idx === completedCount && metricNum < 100) {
-            status = MILESTONE_STATUS.IN_PROGRESS;
-          }
-          return {
-            _id: milestone._id,
-            title: milestone.title,
-            status
-          };
-        });
+      if (kpi.status === 'Completed') {
+        return res.status(400).json({ message: 'Cannot submit progress updates to an already completed and approved KPI.' });
       }
+
+      // Calculate milestone auto-progression based on progress percentage thresholds
+      const updatedMilestones = calculateMilestones(kpi.milestones, metricNum);
 
       // Perform atomic update with version checking to prevent lost updates
       updatedKpi = await Kpi.findOneAndUpdate(
@@ -466,5 +519,359 @@ exports.submitProgress = async (req, res) => {
   } catch (error) {
     console.error(`Error in submitProgress: ${error.stack}`);
     res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+/**
+ * @desc    Get manager dashboard stats
+ * @route   GET /api/kpi/manager/dashboard
+ * @access  Protected (Manager only)
+ */
+exports.getManagerDashboardData = async (req, res) => {
+  try {
+    // Get all KPIs (no assignee filter - manager sees everything)
+    const allKpis = await Kpi.find({});
+    const User = require('../models/User');
+    
+    // Fetch all staff users for team progress
+    const staffUsers = await User.find({ role: 'staff', isActive: true });
+    
+    let totalScore = 0;
+    let completedCount = 0;
+    let pendingReviewCount = 0;
+    let overdueCount = 0;
+    let uniqueAssignees = new Set();
+    
+    for (const kpi of allKpis) {
+      totalScore += kpi.achievementScore || 0;
+      
+      if (kpi.status === 'Completed') {
+        completedCount++;
+      }
+      
+      if (kpi.assignee) {
+        uniqueAssignees.add(kpi.assignee);
+      }
+      
+      if (kpi.submissions && kpi.submissions.length > 0) {
+        const pendingSubmissions = kpi.submissions.filter(sub => sub.status === 'Pending');
+        pendingReviewCount += pendingSubmissions.length;
+        
+        const now = new Date();
+        for (const sub of pendingSubmissions) {
+          if (sub.createdAt) {
+            const hoursSince = (now - new Date(sub.createdAt)) / (1000 * 60 * 60);
+            if (hoursSince > 48) {
+              overdueCount++;
+            }
+          }
+        }
+      }
+    }
+    
+    const avgProgress = allKpis.length > 0 ? Math.round(totalScore / allKpis.length) : 0;
+    
+    // Build team progress overview dynamically
+    const teamProgress = [];
+    for (const user of staffUsers) {
+      const userKpis = allKpis.filter(k => k.assignee === user.email);
+      let avgScore = 0;
+      if (userKpis.length > 0) {
+        const total = userKpis.reduce((sum, k) => sum + (k.achievementScore || 0), 0);
+        avgScore = Math.round(total / userKpis.length);
+      }
+      teamProgress.push({
+        name: `${user.firstName} ${user.lastName}`,
+        initials: `${user.firstName[0]}${user.lastName[0]}`.toUpperCase(),
+        role: user.roleAtShop || user.positionTitle || 'Staff',
+        progress: avgScore,
+        kpiCount: userKpis.length
+      });
+    }
+
+    // Fetch recent activity feed
+    const activities = await Activity.find({}).sort({ createdAt: -1 }).limit(10);
+    const recentActivity = activities.map(act => ({
+      id: act._id,
+      title: act.title,
+      desc: act.desc,
+      time: getRelativeTime(act.createdAt),
+      dotColor: act.dotColor || '#1b6a38'
+    }));
+    
+    const stats = {
+      overallProgress: { value: avgProgress, change: "+12%" },
+      kpisAssigned: { value: allKpis.length, change: `+${allKpis.length}` },
+      completed: { value: completedCount, change: `+${completedCount}` },
+      pendingReview: { value: pendingReviewCount, change: `${pendingReviewCount} new` },
+      overdue: { value: overdueCount, change: `+${overdueCount}` },
+      teamProgress,
+      recentActivity
+    };
+    
+    res.status(200).json(stats);
+    
+  } catch (error) {
+    console.error('Error in getManagerDashboardData:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * @desc    Approve a staff KPI submission
+ * @route   PATCH /api/kpi/approve
+ * @access  Protected (Manager only)
+ */
+exports.approveSubmission = async (req, res) => {
+  try {
+    const { kpiId, submissionId } = req.body;
+
+    const kpi = await Kpi.findById(kpiId);
+    if (!kpi) {
+      return res.status(404).json({ message: 'KPI not found' });
+    }
+
+    const submission = kpi.submissions.id(submissionId);
+    if (!submission) {
+      return res.status(404).json({ message: 'Submission record not found' });
+    }
+
+    if (submission.status === 'Approved') {
+      return res.status(400).json({ message: 'Submission is already approved' });
+    }
+
+    submission.status = 'Approved';
+
+    const approvedScore = submission.newMetricValue || submission.progressValue || 0;
+    kpi.achievementScore = approvedScore;
+
+    if (approvedScore === 100) {
+      kpi.status = 'Completed';
+    }
+
+    await kpi.save();
+
+    res.status(200).json({
+      message: 'Submission approved successfully. KPI scores updated.',
+      kpi
+    });
+  } catch (error) {
+    console.error('Error in approveSubmission:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * @desc    Get a single KPI by ID
+ * @route   GET /api/kpi/:id
+ * @access  Protected
+ */
+exports.getKpiById = async (req, res) => {
+  try {
+    const kpi = await Kpi.findById(req.params.id);
+    if (!kpi) return res.status(404).json({ message: "KPI not found" });
+    res.status(200).json(kpi);
+  } catch (error) {
+    console.error('Error in getKpiById:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc    Delete a KPI by ID
+ * @route   DELETE /api/kpi/:id
+ * @access  Protected (Manager only)
+ */
+exports.deleteKpi = async (req, res) => {
+  try {
+    const kpi = await Kpi.findByIdAndDelete(req.params.id);
+    if (!kpi) return res.status(404).json({ message: "KPI not found" });
+    res.status(200).json({ message: "KPI deleted successfully" });
+  } catch (error) {
+    console.error('Error in deleteKpi:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * @desc    Get all submission records across all KPIs
+ * @route   GET /api/kpi/manager/submissions
+ * @access  Protected (Manager only)
+ */
+exports.getSubmissions = async (req, res) => {
+  try {
+    const kpis = await Kpi.find({});
+    const User = require('../models/User');
+    const users = await User.find({ role: 'staff' });
+    const userMap = {};
+    users.forEach(u => {
+      userMap[u.email] = u;
+    });
+
+    let submissions = [];
+    for (const kpi of kpis) {
+      if (kpi.submissions && kpi.submissions.length > 0) {
+        for (const sub of kpi.submissions) {
+          const staffUser = userMap[kpi.assignee];
+          
+          let oldProgress = 0;
+          const approvedSubs = kpi.submissions.filter(s => s.status === 'Approved' && s.createdAt < sub.createdAt);
+          if (approvedSubs.length > 0) {
+            approvedSubs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            oldProgress = approvedSubs[0].progressValue;
+          }
+
+          submissions.push({
+            id: sub._id,
+            kpiId: kpi._id,
+            kpiTitle: kpi.title,
+            assignee: kpi.assignee,
+            staffName: staffUser ? `${staffUser.firstName} ${staffUser.lastName}` : kpi.assignee,
+            staffRole: staffUser ? staffUser.roleAtShop || staffUser.positionTitle || 'Staff' : 'Staff',
+            staffInitials: staffUser ? `${staffUser.firstName[0]}${staffUser.lastName[0]}`.toUpperCase() : 'ST',
+            progressValue: sub.progressValue,
+            oldProgress: oldProgress,
+            notes: sub.notes,
+            evidenceUrl: sub.evidenceUrl,
+            evidenceUrls: sub.evidenceUrls || [],
+            status: sub.status,
+            createdAt: sub.createdAt,
+            updatedAt: sub.updatedAt
+          });
+        }
+      }
+    }
+
+    submissions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.status(200).json(submissions);
+  } catch (error) {
+    console.error('Error in getSubmissions:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * @desc    Get detailed info of a single submission
+ * @route   GET /api/kpi/manager/submissions/:id
+ * @access  Protected (Manager only)
+ */
+exports.getSubmissionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const kpi = await Kpi.findOne({ "submissions._id": id });
+    if (!kpi) {
+      return res.status(404).json({ message: 'Submission not found' });
+    }
+
+    const sub = kpi.submissions.id(id);
+    if (!sub) {
+      return res.status(404).json({ message: 'Submission not found' });
+    }
+    const User = require('../models/User');
+    const staffUser = await User.findOne({ email: kpi.assignee });
+
+    // Calculate previous progress score before this submission
+    let oldProgress = 0;
+    const approvedSubs = kpi.submissions.filter(s => s.status === 'Approved' && s.createdAt < sub.createdAt);
+    if (approvedSubs.length > 0) {
+      approvedSubs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      oldProgress = approvedSubs[0].progressValue;
+    }
+
+    res.status(200).json({
+      id: sub._id,
+      kpiId: kpi._id,
+      kpiTitle: kpi.title,
+      kpiDescription: kpi.description || kpi.targetText || '',
+      assignee: kpi.assignee,
+      staff: {
+        name: staffUser ? `${staffUser.firstName} ${staffUser.lastName}` : kpi.assignee,
+        role: staffUser ? staffUser.roleAtShop || staffUser.positionTitle || 'Staff' : 'Staff',
+        initials: staffUser ? `${staffUser.firstName[0]}${staffUser.lastName[0]}`.toUpperCase() : 'ST',
+        photoUrl: staffUser ? staffUser.photoUrl : ''
+      },
+      progress: {
+        old: oldProgress,
+        new: sub.progressValue
+      },
+      note: sub.notes,
+      evidenceUrl: sub.evidenceUrl,
+      evidenceUrls: sub.evidenceUrls || [],
+      status: sub.status,
+      createdAt: sub.createdAt
+    });
+  } catch (error) {
+    console.error('Error in getSubmissionById:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+/**
+ * @desc    Submit submission decision (approve/reject/revision requested)
+ * @route   PATCH /api/kpi/manager/submissions/:id/decision
+ * @access  Protected (Manager only)
+ */
+exports.handleSubmissionDecision = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, comment } = req.body;
+
+    if (!['Approved', 'Rejected', 'Revision requested'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status decision' });
+    }
+
+    const kpi = await Kpi.findOne({ "submissions._id": id });
+    if (!kpi) {
+      return res.status(404).json({ message: 'KPI submission not found' });
+    }
+
+    const submission = kpi.submissions.id(id);
+    if (!submission) {
+      return res.status(404).json({ message: 'Submission not found' });
+    }
+
+    submission.status = status;
+    submission.feedback = comment || '';
+    kpi.markModified('submissions');
+
+    if (status === 'Approved') {
+      const approvedScore = submission.progressValue || 0;
+      kpi.achievementScore = approvedScore;
+      kpi.milestones = calculateMilestones(kpi.milestones, approvedScore);
+      if (approvedScore === 100) {
+        kpi.status = 'Completed';
+      } else {
+        kpi.status = 'In Progress';
+      }
+    } else {
+      kpi.status = 'In Progress';
+    }
+
+    await kpi.save();
+
+    // Log Activity
+    try {
+      const Activity = require('../models/Activity');
+      const newActivity = new Activity({
+        assignee: kpi.assignee,
+        title: `Submission ${status.toLowerCase()}`,
+        desc: `Submission for '${kpi.title}' has been ${status.toLowerCase()}.${comment ? ` Reason/Note: ${comment}` : ''}`,
+        type: status === 'Approved' ? 'evidence_approved' : status === 'Rejected' ? 'progress_update' : 'revision_requested',
+        dotColor: status === 'Approved' ? '#1b6a38' : '#c73a24',
+        kpiId: kpi._id
+      });
+      await newActivity.save();
+    } catch (actError) {
+      console.error(`Failed to log activity record: ${actError.stack}`);
+    }
+
+    res.status(200).json({
+      message: `Submission ${status.toLowerCase()} successfully`,
+      kpi
+    });
+  } catch (error) {
+    console.error('Error in handleSubmissionDecision:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };

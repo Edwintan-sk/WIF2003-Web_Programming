@@ -25,6 +25,11 @@ const KPICard = ({ data }) => (
         <span className="me-1 font-monospace opacity-75">Target</span> 
         <span className="fw-bold text-dark">{data.target}</span>
       </p>
+      {data.status === 'Revision requested' && data.feedback && (
+        <div className="mt-2 p-2 rounded staff-text-xs" style={{ backgroundColor: '#fff8e1', borderLeft: '3px solid #ffb300', color: '#5d4037' }}>
+          <strong>Revision Requested Note:</strong> {data.feedback}
+        </div>
+      )}
     </Col>
 
     {/* Progress Section */}
@@ -75,13 +80,23 @@ const KPICard = ({ data }) => (
         {data.status}
       </div>
 
-      <Link 
-        to={`/staff/submit?kpiId=${data.id}`}
-        className="btn rounded-circle staff-btn-action-arrow flex-shrink-0 d-flex align-items-center justify-content-center p-0 border-0"
-        title="Submit progress update"
-      >
-        <ArrowRight color="#1A1A1A" />
-      </Link>
+      {(data.status || '').toLowerCase() !== 'completed' ? (
+        <Link 
+          to={`/staff/submit?kpiId=${data.id}`}
+          className="btn rounded-circle staff-btn-action-arrow flex-shrink-0 d-flex align-items-center justify-content-center p-0 border-0"
+          title="Submit progress update"
+        >
+          <ArrowRight color="#1A1A1A" />
+        </Link>
+      ) : (
+        <div 
+          className="btn rounded-circle staff-btn-action-arrow flex-shrink-0 d-flex align-items-center justify-content-center p-0 border-0 bg-light"
+          style={{ cursor: 'not-allowed', opacity: 0.8 }}
+          title="KPI Completed & Approved"
+        >
+          <CheckCircleFill color="#183628" size={16} />
+        </div>
+      )}
     </Col>
   </Row>
 );
@@ -129,7 +144,7 @@ export default function StaffAssignedKPI() {
     const normStatus = (kpi.status || '').toLowerCase();
     
     if (activePill === 'Active') {
-      matchesPill = normStatus === 'in progress' || normStatus === 'on track' || normStatus === 'not started';
+      matchesPill = normStatus === 'in progress' || normStatus === 'on track' || normStatus === 'not started' || normStatus === 'revision requested';
     } else if (activePill === 'Project Mgmt') {
       matchesPill = kpi.tag1 === 'Project Mgmt';
     } else if (activePill === 'Pending review') {
@@ -158,7 +173,7 @@ export default function StaffAssignedKPI() {
     return kpis.filter(kpi => {
       const normStatus = (kpi.status || '').toLowerCase();
       if (pillLabel === 'All') return true;
-      if (pillLabel === 'Active') return normStatus === 'in progress' || normStatus === 'on track' || normStatus === 'not started';
+      if (pillLabel === 'Active') return normStatus === 'in progress' || normStatus === 'on track' || normStatus === 'not started' || normStatus === 'revision requested';
       if (pillLabel === 'Project Mgmt') return kpi.tag1 === 'Project Mgmt';
       if (pillLabel === 'Pending review') return normStatus === 'under review';
       if (pillLabel === 'Completed') return normStatus === 'completed';

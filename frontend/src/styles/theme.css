@@ -688,6 +688,33 @@ h1, h2, h3 {
   background-color: #D74528;
 }
 
+.btn-auth-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.auth-submit-link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
+.auth-submit-link:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.auth-error {
+  color: #B31B1B;
+  background-color: #FCE8E6;
+  border: 1px solid #F5B5AD;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .auth-bottom {
   text-align: center;
   font-size: 11.5px;

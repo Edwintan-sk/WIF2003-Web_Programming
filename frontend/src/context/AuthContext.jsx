@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import api from '../utils/axiosInstance';
 
 const AuthContext = createContext(null);
-const AUTH_API_URL = 'http://localhost:5000/api/auth';
+
+const getRequestMessage = (error, fallback) =>
+  error.response?.data?.message || error.message || fallback;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -10,21 +13,10 @@ export function AuthProvider({ children }) {
 
   const checkSession = async () => {
     try {
-      const response = await fetch(`${AUTH_API_URL}/me`, {
-        method: 'GET',
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        setUser(null);
-        setIsAuthenticated(false);
-        return null;
-      }
-
-      const data = await response.json();
-      setUser(data.user);
+      const response = await api.get('/api/auth/me');
+      setUser(response.data.user);
       setIsAuthenticated(true);
-      return data.user;
+      return response.data.user;
     } catch {
       setUser(null);
       setIsAuthenticated(false);
@@ -39,29 +31,20 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async ({ email, password, role, remember }) => {
-    const response = await fetch(`${AUTH_API_URL}/login`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    try {
+      const response = await api.post('/api/auth/login', {
         email,
         password,
         role,
         remember,
-      }),
-    });
+      });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Unable to sign in.');
+      setUser(response.data.user);
+      setIsAuthenticated(true);
+      return response.data.user;
+    } catch (error) {
+      throw new Error(getRequestMessage(error, 'Unable to sign in.'));
     }
-
-    setUser(data.user);
-    setIsAuthenticated(true);
-    return data.user;
   };
 
   const register = async (registrationData) => {
@@ -73,29 +56,52 @@ export function AuthProvider({ children }) {
       }
     });
 
-    const response = await fetch(`${AUTH_API_URL}/register`, {
-      method: 'POST',
-      body: formData,
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.message || 'Unable to create account.');
+    try {
+      const response = await api.post('/api/auth/register', formData);
+      return response.data.user;
+    } catch (error) {
+      throw new Error(getRequestMessage(error, 'Unable to create account.'));
     }
-
-    return data.user;
   };
 
   const logout = async () => {
     try {
-      await fetch(`${AUTH_API_URL}/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await api.post('/api/auth/logout');
     } finally {
       setUser(null);
       setIsAuthenticated(false);
+    }
+  };
+
+  const requestPasswordReset = async (email) => {
+    try {
+      const response = await api.post('/api/auth/forgot-password', { email });
+      return response.data.message;
+    } catch (error) {
+      throw new Error(
+        getRequestMessage(error, 'Unable to request a password reset.')
+      );
+    }
+  };
+
+  const resetPassword = async (
+    token,
+    password,
+    confirmPassword
+  ) => {
+    try {
+      const response = await api.post(`/api/auth/reset-password/${token}`, {
+        password,
+        confirmPassword,
+      });
+
+      setUser(null);
+      setIsAuthenticated(false);
+      return response.data.message;
+    } catch (error) {
+      throw new Error(
+        getRequestMessage(error, 'Unable to reset the password.')
+      );
     }
   };
 
@@ -108,6 +114,8 @@ export function AuthProvider({ children }) {
         register,
         login,
         logout,
+        requestPasswordReset,
+        resetPassword,
         checkSession,
       }}
     >

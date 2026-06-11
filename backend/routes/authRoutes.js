@@ -1,13 +1,39 @@
 const express = require('express');
+const crypto = require('crypto');
 const fs = require('fs/promises');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
+const { rateLimit } = require('express-rate-limit');
 const User = require('../models/User');
 const { protectRoute } = require('../middleware/authMiddleware');
 const { uploadProfilePhoto } = require('../config/profileUpload');
+const { sendEmail, isConfigured: isEmailConfigured } = require('../utils/email');
 
 const router = express.Router();
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const PASSWORD_RESET_EXPIRY_MS = 15 * 60 * 1000;
+const PASSWORD_RESET_RESPONSE =
+  'If an active account exists for this email, a reset link has been sent.';
+
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: {
+    message: 'Too many password reset requests. Please try again in 15 minutes.',
+  },
+});
+
+const resetPasswordLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  message: {
+    message: 'Too many password reset attempts. Please try again in 15 minutes.',
+  },
+});
 
 const buildSafeUser = (user) => ({
   id: user._id,
@@ -132,6 +158,148 @@ router.use((error, req, res, next) => {
   return res.status(400).json({
     message: 'Profile photo must be a JPEG, PNG, or WebP image.',
   });
+});
+
+router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
+  const email = req.body.email?.trim().toLowerCase();
+
+  if (!email) {
+    return res.status(400).json({
+      message: 'Email is required.',
+    });
+  }
+
+  if (!isEmailConfigured()) {
+    console.error('Password reset requested while SMTP is not configured.');
+    return res.status(503).json({
+      message: 'Password reset email is temporarily unavailable.',
+    });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user || !user.isActive) {
+      return res.status(200).json({
+        message: PASSWORD_RESET_RESPONSE,
+      });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    user.passwordResetToken = resetTokenHash;
+    user.passwordResetExpires = new Date(Date.now() + PASSWORD_RESET_EXPIRY_MS);
+    await user.save();
+
+    const clientOrigin = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+      .replace(/\/+$/, '');
+    const resetUrl = `${clientOrigin}/reset-password/${resetToken}`;
+    const emailSent = await sendEmail({
+      to: user.email,
+      subject: '[KP EYE] Reset your password',
+      text: [
+        'A password reset was requested for your KP EYE account.',
+        `Reset your password using this link: ${resetUrl}`,
+        'This link expires in 15 minutes and can only be used once.',
+        'If you did not request this reset, you can ignore this email.',
+      ].join('\n\n'),
+      html: `
+        <p>A password reset was requested for your KP EYE account.</p>
+        <p><a href="${resetUrl}">Reset your password</a></p>
+        <p>This link expires in 15 minutes and can only be used once.</p>
+        <p>If you did not request this reset, you can ignore this email.</p>
+      `,
+    });
+
+    if (!emailSent) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save();
+      console.error(`Unable to deliver password reset email to ${user.email}.`);
+    }
+
+    return res.status(200).json({
+      message: PASSWORD_RESET_RESPONSE,
+    });
+  } catch (error) {
+    console.error(`Forgot password error: ${error.message}`);
+    return res.status(500).json({
+      message: 'Unable to process the password reset request.',
+    });
+  }
+});
+
+router.post('/reset-password/:token', resetPasswordLimiter, async (req, res) => {
+  const { password, confirmPassword } = req.body;
+
+  if (!password || !confirmPassword) {
+    return res.status(400).json({
+      message: 'Password and password confirmation are required.',
+    });
+  }
+
+  if (password !== confirmPassword) {
+    return res.status(400).json({
+      message: 'Passwords do not match.',
+    });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({
+      message: 'Password must be at least 8 characters.',
+    });
+  }
+
+  try {
+    const resetTokenHash = crypto
+      .createHash('sha256')
+      .update(req.params.token)
+      .digest('hex');
+
+    const user = await User.findOne({
+      passwordResetToken: resetTokenHash,
+      passwordResetExpires: { $gt: new Date() },
+      isActive: true,
+    }).select('+passwordResetToken +passwordResetExpires');
+
+    if (!user) {
+      return res.status(400).json({
+        message: 'This password reset link is invalid or has expired.',
+      });
+    }
+
+    user.password = password;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    user.passwordChangedAt = new Date(Date.now() - 1000);
+    await user.save();
+
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+
+    return res.status(200).json({
+      message: 'Password reset successful. You can now sign in with your new password.',
+    });
+  } catch (error) {
+    console.error(`Reset password error: ${error.message}`);
+
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        message: error.message,
+      });
+    }
+
+    return res.status(500).json({
+      message: 'Unable to reset the password.',
+    });
+  }
 });
 
 router.post('/login', async (req, res) => {

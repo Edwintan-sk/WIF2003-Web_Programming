@@ -21,6 +21,12 @@ const sanitizeInput = (str) => {
   return str.replace(/<[^>]*>/g, '').trim();
 };
 
+const getUploadedEvidenceUrl = (file) => {
+  if (!file) return '';
+  if (file.path && /^https?:\/\//i.test(file.path)) return file.path;
+  return file.filename ? `/uploads/${file.filename}` : '';
+};
+
 const assignedTo = (email) => ({
   $or: [
     { assignee: email },
@@ -394,9 +400,9 @@ exports.submitProgress = async (req, res) => {
     const assigneeEmail = req.user.email;
     let evidenceUrls = [];
     if (req.files && req.files.length > 0) {
-      evidenceUrls = req.files.map(file => file.path && file.path.startsWith('http') ? file.path : `/uploads/${file.filename}`);
+      evidenceUrls = req.files.map(getUploadedEvidenceUrl).filter(Boolean);
     } else if (req.file) {
-      evidenceUrls = [req.file.path && req.file.path.startsWith('http') ? req.file.path : `/uploads/${req.file.filename}`];
+      evidenceUrls = [getUploadedEvidenceUrl(req.file)].filter(Boolean);
     }
     let evidenceUrl = evidenceUrls.length > 0 ? evidenceUrls[0] : (req.body.evidenceUrl || '');
 

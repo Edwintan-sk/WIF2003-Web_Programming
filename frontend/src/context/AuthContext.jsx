@@ -3,8 +3,13 @@ import api from '../utils/axiosInstance';
 
 const AuthContext = createContext(null);
 
-const getRequestMessage = (error, fallback) =>
-  error.response?.data?.message || error.message || fallback;
+const getRequestMessage = (error, fallback) => {
+  if (error.code === 'ERR_NETWORK') {
+    return 'Unable to reach the API server. Please make sure the backend is running.';
+  }
+
+  return error.response?.data?.message || error.message || fallback;
+};
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);

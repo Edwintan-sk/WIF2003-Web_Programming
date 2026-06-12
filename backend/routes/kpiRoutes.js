@@ -12,7 +12,12 @@ router.get('/dashboard', protectRoute, kpiController.getDashboardData);
 router.get('/assigned', protectRoute, kpiController.getAssignedKpis);
 router.post('/progress', protectRoute, (req, res, next) => {
   upload.any()(req, res, (error) => {
-    if (error) return res.status(400).json({ message: error.message });
+    if (error) {
+      return res.status(400).json({
+        message: error.message,
+        storageMode: upload.storageMode,
+      });
+    }
     next();
   });
 }, kpiController.submitProgress);

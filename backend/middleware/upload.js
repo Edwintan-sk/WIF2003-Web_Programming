@@ -4,7 +4,14 @@ const fs = require('fs');
 
 let storage;
 
-if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+const hasEnvValue = (value) => Boolean(value && !/^<.*>$/.test(value.trim()));
+const cloudinaryConfigured =
+  hasEnvValue(process.env.CLOUDINARY_CLOUD_NAME) &&
+  hasEnvValue(process.env.CLOUDINARY_API_KEY) &&
+  hasEnvValue(process.env.CLOUDINARY_API_SECRET);
+const useLocalUploads = process.env.USE_LOCAL_UPLOADS === 'true';
+
+if (cloudinaryConfigured) {
   const cloudinary = require('cloudinary').v2;
   const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
@@ -25,7 +32,7 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
     }
   });
   console.log('Using Cloudinary for file uploads storage.');
-} else {
+} else if (useLocalUploads) {
   // Ensure local upload directory exists
   const uploadDir = path.join(__dirname, '../uploads');
   if (!fs.existsSync(uploadDir)) {
@@ -48,6 +55,20 @@ if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && proce
     }
   });
   console.log('Using Local Disk Storage for file uploads.');
+} else {
+  storage = {
+    _handleFile(req, file, cb) {
+      cb(
+        new Error(
+          'Cloudinary is not configured. Add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to backend/.env, or set USE_LOCAL_UPLOADS=true for local-only development.'
+        )
+      );
+    },
+    _removeFile(req, file, cb) {
+      cb(null);
+    },
+  };
+  console.warn('Cloudinary is not configured. Evidence uploads will be rejected.');
 }
 
 // File type validation filter
@@ -70,5 +91,11 @@ const upload = multer({
     fileSize: 25 * 1024 * 1024 // 25MB limit
   }
 });
+
+upload.storageMode = cloudinaryConfigured
+  ? 'cloudinary'
+  : useLocalUploads
+    ? 'local'
+    : 'unconfigured';
 
 module.exports = upload;

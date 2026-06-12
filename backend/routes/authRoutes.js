@@ -1,12 +1,15 @@
 const express = require('express');
 const crypto = require('crypto');
-const fs = require('fs/promises');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const { rateLimit } = require('express-rate-limit');
 const User = require('../models/User');
 const { protectRoute } = require('../middleware/authMiddleware');
-const { uploadProfilePhoto } = require('../config/profileUpload');
+const {
+  getProfilePhotoUrl,
+  removeUploadedProfilePhoto,
+  uploadProfilePhoto,
+} = require('../config/profileUpload');
 const { sendEmail, isConfigured: isEmailConfigured } = require('../utils/email');
 
 const router = express.Router();
@@ -53,18 +56,6 @@ const buildSafeUser = (user) => ({
   createdAt: user.createdAt,
 });
 
-const removeUploadedFile = async (file) => {
-  if (!file?.path) return;
-
-  try {
-    await fs.unlink(file.path);
-  } catch (error) {
-    if (error.code !== 'ENOENT') {
-      console.error(`Unable to remove uploaded profile photo: ${error.message}`);
-    }
-  }
-};
-
 router.post('/register', uploadProfilePhoto.single('photo'), async (req, res) => {
   try {
     const {
@@ -83,7 +74,7 @@ router.post('/register', uploadProfilePhoto.single('photo'), async (req, res) =>
     } = req.body;
 
     if (!role || !firstName || !lastName || !roleAtShop || !email || !password) {
-      await removeUploadedFile(req.file);
+      await removeUploadedProfilePhoto(req.file);
       return res.status(400).json({
         message: 'Role, first name, last name, role at shop, email, and password are required.',
       });
@@ -93,7 +84,7 @@ router.post('/register', uploadProfilePhoto.single('photo'), async (req, res) =>
     const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
-      await removeUploadedFile(req.file);
+      await removeUploadedProfilePhoto(req.file);
       return res.status(409).json({
         message: 'An account with this email already exists.',
       });
@@ -101,7 +92,7 @@ router.post('/register', uploadProfilePhoto.single('photo'), async (req, res) =>
 
     const user = new User({
       role,
-      photoUrl: req.file ? `/uploads/profiles/${req.file.filename}` : '',
+      photoUrl: getProfilePhotoUrl(req.file),
       firstName,
       lastName,
       englishName,
@@ -122,7 +113,7 @@ router.post('/register', uploadProfilePhoto.single('photo'), async (req, res) =>
       user: buildSafeUser(user),
     });
   } catch (error) {
-    await removeUploadedFile(req.file);
+    await removeUploadedProfilePhoto(req.file);
 
     if (error.code === 11000) {
       const duplicateField = Object.keys(error.keyPattern || {})[0] || 'field';

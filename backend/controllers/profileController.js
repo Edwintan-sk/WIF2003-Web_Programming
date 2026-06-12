@@ -1,6 +1,9 @@
-const fs = require('fs/promises');
-const path = require('path');
 const User = require('../models/User');
+const {
+  getProfilePhotoUrl,
+  removeStoredProfilePhoto,
+  removeUploadedProfilePhoto,
+} = require('../config/profileUpload');
 
 const EDITABLE_PROFILE_FIELDS = [
   'firstName',
@@ -31,30 +34,6 @@ const buildSafeUser = (user) => ({
   createdAt: user.createdAt,
   updatedAt: user.updatedAt,
 });
-
-const removeFile = async (filePath) => {
-  if (!filePath) return;
-
-  try {
-    await fs.unlink(filePath);
-  } catch (error) {
-    if (error.code !== 'ENOENT') {
-      console.error(`Unable to remove profile photo: ${error.message}`);
-    }
-  }
-};
-
-const getLocalPhotoPath = (photoUrl) => {
-  if (!photoUrl?.startsWith('/uploads/profiles/')) return null;
-
-  return path.join(
-    __dirname,
-    '..',
-    'uploads',
-    'profiles',
-    path.basename(photoUrl)
-  );
-};
 
 const clearAuthCookie = (res) => {
   res.clearCookie('token', {
@@ -90,7 +69,7 @@ exports.updateProfile = async (req, res) => {
     const user = await User.findById(req.user.userId);
 
     if (!user) {
-      await removeFile(req.file?.path);
+      await removeUploadedProfilePhoto(req.file);
       return res.status(404).json({
         message: 'User not found.',
       });
@@ -102,16 +81,16 @@ exports.updateProfile = async (req, res) => {
       }
     });
 
-    const oldPhotoPath = getLocalPhotoPath(user.photoUrl);
+    const oldPhotoUrl = user.photoUrl;
 
     if (req.file) {
-      user.photoUrl = `/uploads/profiles/${req.file.filename}`;
+      user.photoUrl = getProfilePhotoUrl(req.file);
     }
 
     await user.save();
 
-    if (req.file && oldPhotoPath) {
-      await removeFile(oldPhotoPath);
+    if (req.file) {
+      await removeStoredProfilePhoto(oldPhotoUrl);
     }
 
     return res.status(200).json({
@@ -119,7 +98,7 @@ exports.updateProfile = async (req, res) => {
       user: buildSafeUser(user),
     });
   } catch (error) {
-    await removeFile(req.file?.path);
+    await removeUploadedProfilePhoto(req.file);
 
     if (error.name === 'ValidationError') {
       return res.status(400).json({

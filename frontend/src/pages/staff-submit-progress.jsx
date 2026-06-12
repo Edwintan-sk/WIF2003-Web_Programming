@@ -186,6 +186,11 @@ export default function StaffSubmitProgress() {
     }
   };
 
+  const openEvidenceFile = (fileUrl) => {
+    if (!fileUrl) return;
+    window.location.assign(fileUrl);
+  };
+
   return (
     <div className="d-flex">
       <Sidebar role="staff" />
@@ -474,12 +479,15 @@ export default function StaffSubmitProgress() {
                                         {sub.evidenceUrls && sub.evidenceUrls.length > 0 ? (
                                           sub.evidenceUrls.map((url, uidx) => {
                                             const fName = url.split('/').pop() || `File ${uidx + 1}`;
+                                            const fileUrl = getAssetUrl(url);
                                             return (
                                               <a
                                                 key={uidx}
-                                                href={getAssetUrl(url)}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                                href={fileUrl}
+                                                onClick={(event) => {
+                                                  event.preventDefault();
+                                                  openEvidenceFile(fileUrl);
+                                                }}
                                                 className="badge bg-light text-dark border d-inline-flex align-items-center gap-1 text-decoration-none"
                                                 style={{ fontSize: '10px', maxWidth: '100%', overflow: 'hidden' }}
                                                 title={fName}
@@ -491,8 +499,10 @@ export default function StaffSubmitProgress() {
                                         ) : (
                                           <a
                                             href={getAssetUrl(sub.evidenceUrl)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
+                                            onClick={(event) => {
+                                              event.preventDefault();
+                                              openEvidenceFile(getAssetUrl(sub.evidenceUrl));
+                                            }}
                                             className="badge bg-light text-dark border d-inline-flex align-items-center gap-1 text-decoration-none"
                                             style={{ fontSize: '10px', maxWidth: '100%', overflow: 'hidden' }}
                                             title={sub.evidenceUrl.split('/').pop() || 'Attachment'}

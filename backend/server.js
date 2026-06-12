@@ -3,6 +3,7 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db.js');
 
 const app = express();
@@ -32,6 +33,26 @@ app.use(cookieParser());
 // Serve uploads folder statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+app.get('/api/health', (req, res) => {
+  const dbConnected = mongoose.connection.readyState === 1;
+
+  res.status(dbConnected ? 200 : 503).json({
+    api: 'ok',
+    database: dbConnected ? 'connected' : 'unavailable',
+  });
+});
+
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState === 1) {
+    return next();
+  }
+
+  return res.status(503).json({
+    message:
+      'Database unavailable. Check MongoDB Atlas Network Access or update MONGO_URI to a reachable database.',
+  });
+});
+
 // Route Middleware
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/profile', require('./routes/profileRoutes'));
@@ -46,5 +67,5 @@ app.get('/', (req, res) => {
 });
 
 // Start listening
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => console.log(`Server running in development on port ${PORT}`));
